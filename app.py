@@ -131,8 +131,5 @@ def subscribe():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-<<<<<<< HEAD
     app.run(host="0.0.0.0", port=port)
-=======
-    app.run(host="0.0.0.0", port=port)
->>>>>>> 72ad794 (fix: added flask-cors)
+

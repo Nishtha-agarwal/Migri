@@ -3,8 +3,4 @@ services:
     name: saas-api
     env: python
     buildCommand: pip install -r requirements.txt
-<<<<<<< HEAD
     startCommand: python app.py
-=======
-    startCommand: python app.py
->>>>>>> 72ad794 (fix: added flask-cors)
