@@ -178,39 +178,57 @@ async function register() {
         showToast("Fill all fields");
         return;
     }
-    const res = await fetch("http://127.0.0.1:8000/api/register", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ username, password, tenant_id: tenant })
-    });
-    const data = await res.json();
-    showToast(data.msg || data.error);
-    if (res.ok) showLogin();
+
+    try {
+        const res = await fetch("http://127.0.0.1:8000/api/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ username, password, tenant_id: tenant })
+        });
+
+        const data = await res.json();
+        showToast(data.msg || data.error);
+
+        if (res.ok) showLogin();
+    } catch (err) {
+        showToast("Server error");
+        console.error(err);
+    }
 }
 
 // 🔹 LOGIN
 async function login() {
     const username = login_username.value;
     const password = login_password.value;
+
     if (!username || !password) {
         showToast("Enter credentials");
         return;
     }
-    const res = await fetch("http://127.0.0.1:8000/api/login", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        credentials: "include",  
-        body: JSON.stringify({ username, password })
-    });
-    const data = await res.json();
-    if (!res.ok) {
-        showToast(data.msg || "Login failed");
-        return;
+
+    try {
+        const res = await fetch("http://127.0.0.1:8000/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            showToast(data.msg || data.error || "Login failed");
+            return;
+        }
+
+        showToast("Login successful 🚀");
+        setTimeout(() => {
+            window.location.href = "/dashboard"; // redirect
+        }, 1000);
+    } catch (err) {
+        showToast("Server error");
+        console.error(err);
     }
-    showToast("Login successful 🚀");
-    setTimeout(() => {
-        window.location.href = "/dashboard"; 
-    }, 1000);
 }
 </script>
 
