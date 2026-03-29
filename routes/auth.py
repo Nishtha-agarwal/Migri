@@ -2,23 +2,35 @@ from flask import Blueprint, request, jsonify
 from models import User
 from extensions import db
 from flask_jwt_extended import create_access_token, set_access_cookies
-
+from sqlalchemy.exc import IntegrityError
 auth_bp = Blueprint('auth', __name__)
 
-@auth_bp.route('/register', methods=['POST'])
+@auth_bp.route("/register", methods=["POST"])
 def register():
     data = request.get_json()
-
-    user = User(
-        username=data['username'],
-        password=data['password'],
-        tenant_id=data['tenant_id']
+    username = data.get("username")
+    password = data.get("password")
+    # 🔹 Step 1: Pre-check
+    existing_user = User.query.filter_by(username=username).first()
+    if existing_user:
+        return jsonify({"msg": "Username already exists ❌"}), 400
+    # 🔹 Step 2: Create user
+    new_user = User(
+        username=username,
+        password=password,
+        plan="free",
+        tenant_id=1
     )
-
-    db.session.add(user)
-    db.session.commit()
-
-    return jsonify({"msg": "User created"})
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({"msg": "User registered successfully ✅"})
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"msg": "Username already exists ❌"}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Server error ❌", "error": str(e)}), 500
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
@@ -35,4 +47,3 @@ def login():
     response = jsonify({"msg": "login successful"})
     set_access_cookies(response, access_token)   
     return response
-
