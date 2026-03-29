@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard_free</title>
+</head>
+<body>
+
+<h1>Dashboard_free</h1>
+<button onclick="getFeatures()">View Features</button>
+<button onclick="openForm()">Create Project</button>
+
+<!-- 🔹 Project Form Modal -->
+<div id="projectForm" style="display:none; position:fixed; top:30%; left:40%; background:white; padding:20px; box-shadow:0 0 10px gray;">
+    <h3>Create Project</h3>
+    <input id="projectName" placeholder="Project Name" style="display:block; margin-bottom:10px;" />
+    <button onclick="submitProject()">Submit</button>
+    <button onclick="closeForm()">Cancel</button>
+</div>
+
+<h2>Plan Details</h2>
+<div id="planInfo"></div>
+
+<h2>Projects</h2> 
+<table id="projectsTable" border="1" style="border-collapse: collapse; width: 50%;"> 
+    <thead style="background-color: #722de1; color: white;"> 
+        <tr> 
+            <th>#</th> 
+            <th>Project</th>
+            <th>Action</th>
+        </tr> 
+    </thead> 
+    <tbody></tbody> 
+</table>
+
+<!-- 🔹 SUBSCRIPTION MODAL -->
+<div id="subscriptionModal" class="modal">
+    <h3>Upgrade to Pro</h3>
+    <p>💰 Amount: <b>₹500</b></p>
+    <input type="file" id="paymentProof" accept="application/pdf"><br><br>
+    <button onclick="submitSubscription()">Submit</button>
+    <button onclick="closeSubscriptionForm()">Cancel</button>
+</div>
+
+<pre id="output"></pre>
+
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        top: 30%;
+        left: 40%;
+        background: white;
+        padding: 20px;
+        box-shadow: 0 0 10px gray;
+        border-radius: 8px;
+    }   
+    table {
+        font-family: Arial, sans-serif;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(237, 11, 11, 0.1);
+    }
+    th {
+        background: linear-gradient(to right, #4CAF50, #2e7d32);
+        color: white;
+    }
+    tr:hover {
+        background-color: #f1f1f1;
+        transition: 0.2s;
+    }
+</style>
+
+<script>
+// Auto load
+window.onload = () => {
+    loadProjects();
+};
+
+// 🔹 Get Features
+async function getFeatures() {
+    const res = await fetch('/api/features', { 
+        credentials: "include"
+    });
+    let text = await res.text();
+    let data;
+    try {
+        data = JSON.parse(text);
+    } catch {
+        alert("❌ Server error (not JSON)");
+        console.error(text);
+        return;
+    }
+    if (!res.ok) {
+        alert(data.msg || "Error");
+        return;
+    }
+    document.getElementById("planInfo").innerHTML = `
+        <p><b>Plan Name:</b> ${data.plan.name}</p>
+        <p><b>Max Usage:</b> ${data.plan.max_usage}</p>
+        <p><b>Features:</b> ${data.features.join(", ")}</p>
+        <button onclick="openSubscriptionForm()">🚀 Upgrade to PRO</button>
+    `;
+}
+
+// 🔹 Load Projects
+async function loadProjects() {
+    const res = await fetch('/api/projects', {
+        credentials: "include"
+    });
+
+    let text = await res.text();
+    let projects;
+
+    try {
+        projects = JSON.parse(text);
+    } catch {
+        alert("❌ Server error loading projects");
+        console.error(text);
+        return;
+    }
+
+    if (!res.ok) {
+        alert(projects.msg || "Error loading projects");
+        return;
+    }
+
+    const tbody = document.querySelector("#projectsTable tbody");
+    tbody.innerHTML = "";
+
+    projects.forEach((p, index) => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${p.name}</td>
+                <td>
+                    <button onclick="renameProject(${p.id}, '${p.name}')">✏️</button>
+                    <button onclick="deleteProject(${p.id})">❌</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+// 🔹 Create Project
+async function submitProject() {
+    const name = document.getElementById("projectName").value;
+    if (!name) {
+        alert("Enter project name");
+        return;
+    }
+    const res = await fetch('/api/create_project', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        credentials: "include",
+        body: JSON.stringify({ name })
+    });
+    const data = await res.json();
+    if (res.status === 403) {
+        alert("🚫 Limit reached! Upgrade to Pro.");
+        openSubscriptionForm();  
+        return;
+    }
+    if (!res.ok) {
+        alert("Error");
+        return;
+    }
+    alert("✅ " + data.msg);
+    closeForm();
+    document.getElementById("projectName").value = "";
+    loadProjects();
+}
+
+// 🔹 Delete Project
+async function deleteProject(id) {
+    if (!confirm("Delete this project?")) return;
+
+    const res = await fetch(`/api/delete_project/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        alert(data.msg);
+        return;
+    }
+
+    alert("🗑 " + data.msg);
+    loadProjects();
+}
+
+// 🔹 Rename Project
+async function renameProject(id, oldName) {
+    const newName = prompt("Enter new name:", oldName);
+
+    if (!newName || newName === oldName) return;
+
+    const res = await fetch(`/api/update_project/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({ name: newName })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        alert(data.msg);
+        return;
+    }
+
+    alert("✏️ " + data.msg);
+    loadProjects();
+}
+
+// 🔹 Subscription (FIXED)
+async function submitSubscription() {
+    const file = document.getElementById("paymentProof").files[0];
+
+    if (!file) {
+        alert("Upload PDF");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("amount", 500);
+    formData.append("file", file);
+
+    const res = await fetch('/api/subscribe', {
+        method: "POST",
+        credentials: "include",
+        body: formData
+    });
+
+    let text = await res.text();
+    let data;
+
+    try {
+        data = JSON.parse(text);
+    } catch {
+        alert("❌ Server crashed (not JSON)");
+        console.error(text);
+        return;
+    }
+
+    if (!res.ok) {
+        alert(data.msg || "Subscription failed");
+        return;
+    }
+
+    alert("🚀 " + data.msg);
+    closeSubscriptionForm();
+    window.location.href = "/dashboard2";
+}
+
+// 🔹 UI Controls
+function openForm() {
+    document.getElementById("projectForm").style.display = "block";
+}
+
+function closeForm() {
+    document.getElementById("projectForm").style.display = "none";
+}
+
+function openSubscriptionForm() {
+    document.getElementById("subscriptionModal").style.display = "block";
+}
+
+function closeSubscriptionForm() {
+    document.getElementById("subscriptionModal").style.display = "none";
+}
+</script>
+</body>
+</html>
