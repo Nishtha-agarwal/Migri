@@ -1,96 +1,179 @@
-SaaS Subscription & Feature Entitlement API
+# 🚀 SaaS Subscription & Feature Entitlement API
 
-A Flask-based multi-tenant SaaS subscription system with feature-level access control. This project supports:
+A **Flask-based multi-tenant SaaS backend system** that provides secure and scalable **subscription management with feature-level access control**. This project is designed to simulate real-world SaaS platforms where users belong to different tenants, subscribe to plans, and access features based on entitlements.
 
-Tenant isolation
-Role-based access
-Subscription plans
-Feature entitlements
-JWT authentication
+## 📌 Overview
+This system enables:
+* 🏢 **Multi-tenancy** (isolated tenant environments)
+* 🔐 **JWT-based authentication**
+* 🎭 **Role-based access control**
+* 💳 **Subscription plan management**
+* ⚙️ **Feature entitlement enforcement**
 
-Features
-Multi-tenant support
-Subscription plan management (Free, Pro, Enterprise)
-Feature-based access control
-JWT-based authentication
-Seed scripts for initial roles, users, and tenants
-Swagger or Postman-ready API examples
+It is built with clean architecture principles and is suitable for **production-ready SaaS systems**.
 
-Tech Stack
-Backend: Flask, Flask-SQLAlchemy, Flask-Migrate, Flask-JWT-Extended
-Database: SQLite (dev) / PostgreSQL (prod)
-Authentication: JWT
-Others: Python 3.11+, Marshmallow for serialization
+## ✨ Core Features
 
-Setup Instructions
+### 🏢 Multi-Tenant Architecture
+* Each user belongs to a tenant
+* Data isolation across tenants
 
-1. Clone the repository
-git clone <your-repo-url>
-cd saas-subscription-api
+### 🔐 Authentication & Authorization
+* JWT-based authentication
+* Secure login & protected routes
 
-2. Create and activate a virtual environment
+### 🎭 Role-Based Access Control
+* Roles such as **Admin** and **User**
+* Restricted endpoints for admins only
+
+### 💳 Subscription Plans
+* Free, Pro, Enterprise plans
+* Each plan defines allowed features
+
+### ⚙️ Feature Entitlements
+* Feature-level access control
+* Middleware-style validation for protected APIs
+
+### 🌱 Database Seeding
+* Pre-configured tenants, users, and roles
+* Quick project setup using seed script
+
+## 🛠️ Tech Stack
+| Layer          | Technology                                    |
+| -------------- | --------------------------------------------- |
+| Backend        | Flask                                         |
+| ORM            | Flask-SQLAlchemy                              |
+| Migrations     | Flask-Migrate                                 |
+| Authentication | Flask-JWT-Extended                            |
+| Serialization  | Marshmallow                                   |
+| Database       | SQLite (Development), PostgreSQL (Production) |
+| Language       | Python 3.11+                                  |
+
+## ⚙️ Setup Instructions
+
+### 1️⃣ Clone the Repository
+git clone https://github.com/Nishtha-agarwal/Migri
+cd Migri
+
+### 2️⃣ Create Virtual Environment
 python -m venv venv
-source venv/bin/activate        # Linux / macOS
-venv\Scripts\activate           # Windows
+# Activate:
+# Windows
+venv\Scripts\activate
+# Linux / macOS
+source venv/bin/activate
 
-3. Install dependencies
+### 3️⃣ Install Dependencies
 pip install -r requirements.txt
 
-4. Set environment variables (example)
-export FLASK_APP=app.py
-export FLASK_ENV=development
-export SECRET_KEY='supersecretkey'
-export JWT_SECRET_KEY='jwtsecretkey'
-
-5. Initialize the database
-flask db init
-flask db migrate -m "Initial migration"
-flask db upgrade
-
-Database Seeding
-Seed the database with default tenants, roles, and users:
+## 🌱 Database Seeding
+Populate the database with default data:
 python seed.py
 
-Running the Server
-flask run
-Access the API at: http://127.0.0.1:8000/
+This will create:
+* Default tenants
+* Roles (Admin/User)
+* Sample users
+* Subscription plan
 
-Example API Calls
+## ▶️ Running the Application
+python app.py
 
-1. Register a user
-curl -X POST http://127.0.0.1:8000/api/register \
+📍 Access API at:
+`http://127.0.0.1:8000/`
+
+
+## 🔌 API Endpoints
+
+### 🔑 Authentication
+
+#### Register User
+POST /api/register
+#### Login
+POST /api/login
+
+Returns JWT token for authenticated access.
+
+### 🧩 Feature Access
+#### Protected Feature Endpoint
+GET /api/features/dashboard
+
+Requires:
+* Valid JWT
+* Active subscription
+* Feature entitlement
+
+#### Create Subscription Plan
+POST /api/subscriptions
+
+## 📡 Example API Calls
+
+### 1️⃣ Register User
+curl -X POST http://127.0.0.1:8000 \
 -H "Content-Type: application/json" \
--d '{"username":"john", "password":"password123", "tenant_id":1}'
+-d '{"username":"abc","password":"abc","tenant_id":1}'
+-d '{"username":"xyz","password":"zyx","tenant_id":2}'
 
-2. Login to get JWT
-curl -X POST http://127.0.0.1:8000/api/login \
+### 2️⃣ Login (Get JWT)
+curl -X POST http://127.0.0.1:8000 \
 -H "Content-Type: application/json" \
--d '{"username":"john", "password":"password123"}'
+-d '{"username":"abc","password":"abc"}'
+-d '{"username":"xyz","password":"xyz"}'
 
-3. Access a feature-protected endpoint
-curl -X GET http://127.0.0.1:8000/api/features/dashboard \
--H "Authorization: Bearer <JWT_TOKEN>"
-
-4. Add a subscription plan (Admin only)
-curl -X POST http://127.0.0.1:8000/api/subscriptions \
--H "Authorization: Bearer <JWT_TOKEN>" \
--H "Content-Type: application/json" \
--d '{"name":"Pro Plan", "features":["analytics","export"]}
-
-Project Structure:
-
+## 🗂️ Project Structure
 saas-subscription-api/
 │
-├── app.py
-├── config.py
-├── models.py
-├── schemas.py
+├── app.py                 # Main application entry
+├── config.py              # Configuration settings
+├── models.py              # Database models
+│
 ├── routes/
-│   ├── auth.py
-│   ├── tenants.py
-│   ├── subscriptions.py
-│   └── features.py
-├── seed.py
-├── requirements.txt
-├── migrations/
-└── README.md'
+│   ├── auth.py            # Authentication routes
+│   ├── tenants.py         # Tenant management
+│   └── features.py        # Feature access APIs
+│
+├── seed.py                # Database seeding script
+├── requirements.txt       # Dependencies
+├── migrations/            # DB migrations
+└── README.md              # Documentation
+
+## 🏗️ System Architecture
+Client (Postman / Frontend)
+          ↓
+Flask REST API (JWT Auth + RBAC)
+          ↓
+Business Logic (Feature Entitlement)
+          ↓
+Database (SQLite / PostgreSQL)
+
+## ⚠️ Challenges & Solutions
+| Challenge              | Solution                            |
+| ---------------------- | ----------------------------------- |
+| Multi-tenant isolation | Tenant ID-based filtering           |
+| Secure authentication  | JWT tokens with protected routes    |
+| Feature control        | Middleware-based entitlement checks |
+| Scalability            | Modular route structure             |
+
+## 📈 Future Enhancements
+* Payment gateway integration (Stripe / Razorpay)
+* API rate limiting
+* Tenant-specific analytics dashboard
+* Role hierarchy improvements
+
+## 🎓 Learning Outcomes
+* Built a **production-grade SaaS backend**
+* Implemented **multi-tenant architecture**
+* Applied **JWT authentication & RBAC**
+* Designed **scalable API structure**
+* Gained experience with **database migrations & seeding**
+
+## 👨‍💻 Author
+**Nishtha Agarwal**
+SaaS Backend Project – Flask
+
+## 🌐 Deployment
+🔗 **Live URL:** `<your-deployment-link>`
+
+> Recommended platforms:
+* Render
+* Railway
