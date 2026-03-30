@@ -131,7 +131,7 @@ def dashboard2():
 @app.route('/api/features', methods=['GET'])
 @jwt_required()
 def get_features():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(int(user_id))
     if not user:
         return jsonify({"msg": "User not found"}), 404
@@ -166,7 +166,7 @@ def get_features():
 @app.route("/api/projects", methods=["GET"])
 @jwt_required()
 def get_projects():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(int(user_id))
     projects = Project.query.filter_by(user_id=user_id).all()
     return jsonify([
@@ -179,7 +179,7 @@ def get_projects():
 @app.route('/api/create_project', methods=['POST'])
 @jwt_required()
 def create_project():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(int(user_id))
     sub = Subscription.query.filter_by(user_id=user.id).first()
     if sub:
@@ -204,7 +204,7 @@ def create_project():
 @app.route("/api/delete_project/<int:id>", methods=["DELETE"])
 @jwt_required()
 def delete_project(id):
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(int(user_id))
     project = Project.query.filter_by(id=id, user_id=user_id).first()
     if not project:
@@ -217,7 +217,7 @@ def delete_project(id):
 @jwt_required()
 def update_project(id):
     data = request.get_json()
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(int(user_id))
     project = Project.query.filter_by(id=id, user_id=user_id).first()
     if not project:
@@ -229,7 +229,7 @@ def update_project(id):
 @app.route('/api/usage', methods=['GET'])
 @jwt_required()
 def get_usage():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(int(user_id))
     usage = Usage.query.filter_by(tenant_id=user.tenant_id).first()
     sub = Subscription.query.filter_by(user_id=user.id).first()
@@ -241,7 +241,7 @@ def get_usage():
 @app.route('/api/upgrade', methods=['POST'])
 @jwt_required()
 def upgrade():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(int(user_id))
     pro_plan = Plan.query.filter_by(name="Pro").first()
     if not pro_plan:
@@ -257,7 +257,7 @@ def upgrade():
 @app.route('/api/subscribe', methods=['POST'])
 @jwt_required()
 def subscribe():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(int(user_id))
     if not user:
         return jsonify({"msg": "User not found"}), 404
