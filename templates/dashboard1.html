@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dashboard_free</title>
+    <title>Dashboard</title>
 </head>
 <body>
 
-<h1>Dashboard_free</h1>
+<h1 id="dashboardTitle">Dashboard</h1>
+
 <button onclick="getFeatures()">View Features</button>
-<button onclick="openForm()">Create Project</button>
+<button id="createProjectBtn" onclick="openForm()">Create Project</button>
 
 <!-- 🔹 Project Form Modal -->
-<div id="projectForm" class="hidden" style="position:fixed; top:30%; left:40%; background:white; padding:20px; box-shadow:0 0 10px gray;">
+<div id="projectForm" style="display:none; position:fixed; top:30%; left:40%; background:white; padding:20px; box-shadow:0 0 10px gray;">
     <h3>Create Project</h3>
     <input id="projectName" placeholder="Project Name" style="display:block; margin-bottom:10px;" />
     <button onclick="submitProject()">Submit</button>
@@ -20,20 +21,20 @@
 <h2>Plan Details</h2>
 <div id="planInfo"></div>
 
-<h2>Projects</h2> 
-<table id="projectsTable" border="1" style="border-collapse: collapse; width: 50%;"> 
-    <thead style="background-color: #722de1; color: white;"> 
-        <tr> 
-            <th>#</th> 
+<h2>Projects</h2>
+<table id="projectsTable" border="1" style="border-collapse: collapse; width: 50%;">
+    <thead style="background-color: #4CAF50; color: white;">
+        <tr>
+            <th>#</th>
             <th>Project</th>
             <th>Action</th>
-        </tr> 
-    </thead> 
-    <tbody></tbody> 
+        </tr>
+    </thead>
+    <tbody></tbody>
 </table>
 
-<!-- 🔹 SUBSCRIPTION MODAL -->
-<div id="subscriptionModal" class="modal">
+<!-- 🔹 Subscription Modal -->
+<div id="subscriptionModal" style="display:none; position:fixed; top:30%; left:40%; background:white; padding:20px; box-shadow:0 0 10px gray;">
     <h3>Upgrade to Pro</h3>
     <p>💰 Amount: <b>₹500</b></p>
     <input type="file" id="paymentProof" accept="application/pdf"><br><br>
@@ -41,47 +42,7 @@
     <button onclick="closeSubscriptionForm()">Cancel</button>
 </div>
 
-<pre id="output"></pre>
-
 <style>
-    .hidden {
-        display: none;
-    }
-    #projectForm {
-        transition: all 0.3s ease;
-    }
-
-    #projectForm.show {
-        display: block;
-    }
-    #projectForm,
-    #subscriptionModal {
-        opacity: 0;
-        transform: scale(0.9);
-        transition: all 0.3s ease;
-        position: fixed;
-        top: 30%;
-        left: 40%;
-        background: white;
-        padding: 20px;
-        box-shadow: 0 0 10px gray;
-    }
-
-    #projectForm.show,
-    #subscriptionModal.show {
-        opacity: 1;
-        transform: scale(1);
-    }
-    .modal {
-        display: none;
-        position: fixed;
-        top: 30%;
-        left: 40%;
-        background: white;
-        padding: 20px;
-        box-shadow: 0 0 10px gray;
-        border-radius: 8px;
-    }   
     table {
         font-family: Arial, sans-serif;
         border-radius: 8px;
@@ -96,24 +57,12 @@
         background-color: #f1f1f1;
         transition: 0.2s;
     }
-    #projectForm,
-    #subscriptionModal {
-        display: none;
-        opacity: 0;
-        transform: scale(0.9);
-        transition: all 0.3s ease;
-    }
-
-    #projectForm.show,
-    #subscriptionModal.show {
-        display: block;
-        opacity: 1;
-        transform: scale(1);
-    }
 </style>
 
 <script>
-// Auto load
+let userPlan = null; // store plan info
+let projects = [];
+
 window.onload = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -121,71 +70,49 @@ window.onload = async () => {
         window.location.href = "/";
         return;
     }
+
     await getFeatures();
     loadProjects();
 };
 
-    
-// 🔹 Get Features
+// 🔹 Fetch Plan and Features
 async function getFeatures() {
     const token = localStorage.getItem("token");
-    const res = await fetch('/api/features', { 
+    const res = await fetch('/api/features', {
         method: "GET",
-        headers: {
-            Authorization: "Bearer " + token
-        }
+        headers: { Authorization: "Bearer " + token },
+        credentials: "include"
     });
-    let text = await res.text();
+
     let data;
-    try {
-        data = JSON.parse(text);
-    } catch {
-        alert("❌ Server error (not JSON)");
-        console.error(text);
-        return;
-    }
-    if (!res.ok) {
-        alert(data.msg || "Error");
-        return;
-    }
+    try { data = await res.json(); } 
+    catch { alert("❌ Server error"); return; }
+
+    if (!res.ok) { alert(data.msg || "Error"); return; }
+
+    userPlan = data.plan; // store plan globally
+
+    document.getElementById("dashboardTitle").innerText = "Dashboard_" + userPlan.name;
+
     document.getElementById("planInfo").innerHTML = `
-        <p><b>Plan Name:</b> ${data.plan.name}</p>
-        <p><b>Max Usage:</b> ${data.plan.max_usage}</p>
+        <p><b>Plan Name:</b> ${userPlan.name}</p>
+        <p><b>Max Usage:</b> ${userPlan.max_usage}</p>
         <p><b>Features:</b> ${data.features.join(", ")}</p>
-        ${data.plan.name !== "Free" ? "" : `<button onclick="openSubscriptionForm()">🚀 Upgrade to PRO</button>`}
+        ${userPlan.name === "Free" ? `<button onclick="openSubscriptionForm()">🚀 Upgrade to PRO</button>` : ""}
     `;
-    document.querySelector("h1").innerText = "Dashboard_" + data.plan.name;
 }
 
 // 🔹 Load Projects
 async function loadProjects() {
     const token = localStorage.getItem("token");
-    if (!token) {
-        alert("Please login first");
-        window.location.href = "/";
-        return;
-    }
     try {
         const res = await fetch('/api/projects', {
             method: "GET",
-            headers: {
-                Authorization: "Bearer " + token
-            },
+            headers: { Authorization: "Bearer " + token },
             credentials: "include"
         });
-        const text = await res.text();
-        let projects;
-        try {
-            projects = JSON.parse(text);
-        } catch {
-            alert("❌ Server error loading projects");
-            console.error(text);
-            return;
-        }
-        if (!res.ok) {
-            alert(projects.msg || "Error loading projects");
-            return;
-        }
+        projects = await res.json();
+
         const tbody = document.querySelector("#projectsTable tbody");
         tbody.innerHTML = "";
         projects.forEach((p, index) => {
@@ -200,6 +127,12 @@ async function loadProjects() {
                 </tr>
             `;
         });
+
+        // Disable project creation if Free plan limit reached
+        if (userPlan && userPlan.name === "Free" && projects.length >= userPlan.max_usage) {
+            document.getElementById("createProjectBtn").disabled = true;
+        }
+
     } catch (err) {
         console.error(err);
         alert("Server unreachable");
@@ -209,30 +142,25 @@ async function loadProjects() {
 // 🔹 Create Project
 async function submitProject() {
     const name = document.getElementById("projectName").value;
-    if (!name) {
-        alert("Enter project name");
+    if (!name) { alert("Enter project name"); return; }
+
+    // Check Free plan limit
+    if (userPlan.name === "Free" && projects.length >= userPlan.max_usage) {
+        alert("Free plan limit reached. Upgrade to PRO.");
         return;
     }
+
     const token = localStorage.getItem("token");
     try {
         const res = await fetch('/api/create_project', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: "Bearer " + token
-            },
+            headers: { 'Content-Type': 'application/json', Authorization: "Bearer " + token },
             credentials: "include",
             body: JSON.stringify({ name })
         });
         const data = await res.json();
-        if (res.status === 403) {
-            alert("🚫 " + data.msg);
-            return;
-        }
-        if (!res.ok) {
-            alert(data.msg || "Error");
-            return;
-        }
+        if (!res.ok) { alert(data.msg || "Error"); return; }
+
         alert("✅ " + data.msg);
         closeForm();
         document.getElementById("projectName").value = "";
@@ -242,7 +170,7 @@ async function submitProject() {
         alert("Server error");
     }
 }
-    
+
 // 🔹 Delete Project
 async function deleteProject(id) {
     if (!confirm("Delete this project?")) return;
@@ -250,22 +178,15 @@ async function deleteProject(id) {
     try {
         const res = await fetch(`/api/delete_project/${id}`, {
             method: "DELETE",
-            headers: {
-                Authorization: "Bearer" + token
-            },
+            headers: { Authorization: 'Bearer ' + token },
             credentials: "include"
         });
         const data = await res.json();
-        if (!res.ok) {
-            alert(data.msg);
-            return;
-        }
+        if (!res.ok) { alert(data.msg); return; }
+
         alert("🗑 " + data.msg);
         loadProjects();
-    } catch (err) {
-        console.error(err);
-        alert("Server error");
-    }
+    } catch (err) { console.error(err); alert("Server error"); }
 }
 
 // 🔹 Rename Project
@@ -276,91 +197,50 @@ async function renameProject(id, oldName) {
     try {
         const res = await fetch(`/api/update_project/${id}`, {
             method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: "Bearer" + token
-            },
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
             credentials: "include",
             body: JSON.stringify({ name: newName })
         });
         const data = await res.json();
-        if (!res.ok) {
-            alert(data.msg);
-            return;
-        }
+        if (!res.ok) { alert(data.msg); return; }
+
         alert("✏️ " + data.msg);
         loadProjects();
-    } catch (err) {
-        console.error(err);
-        alert("Server error");
-    }
+    } catch (err) { console.error(err); alert("Server error"); }
 }
 
-// 🔹 Subscription (FIXED)
+// 🔹 Modals
+function openForm() { document.getElementById("projectForm").style.display = "block"; }
+function closeForm() { document.getElementById("projectForm").style.display = "none"; }
+
+function openSubscriptionForm() { document.getElementById("subscriptionModal").style.display = "block"; }
+function closeSubscriptionForm() { document.getElementById("subscriptionModal").style.display = "none"; }
+
+// 🔹 Upgrade to PRO
 async function submitSubscription() {
     const file = document.getElementById("paymentProof").files[0];
-    if (!file) {
-        alert("Upload PDF");
-        return;
-    }
+    if (!file) { alert("Upload PDF"); return; }
+
     const token = localStorage.getItem("token");
-    if (!token) {
-        alert("Session expired. Please login again.");
-        window.location.href = "/";
-        return;
-    }
     const formData = new FormData();
     formData.append("amount", 500);
     formData.append("file", file);
+
     try {
         const res = await fetch('/api/subscribe', {
             method: "POST",
-            headers: {
-                Authorization: "Bearer" + token
-            },
+            headers: { Authorization: "Bearer " + token },
             credentials: "include",
             body: formData
         });
-        const text = await res.text();
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch {
-            alert("❌ Server crashed (not JSON)");
-            console.error(text);
-            return;
-        }
-        if (!res.ok) {
-            alert(data.msg || "Subscription failed");
-            return;
-        }
+        const data = await res.json();
+        if (!res.ok) { alert(data.msg || "Subscription failed"); return; }
+
         alert("🚀 " + data.msg);
         closeSubscriptionForm();
-        window.location.href = "/dashboard2";
-    } catch (err) {
-        console.error(err);
-        alert("Server error");
-    }
-}
-
-// 🔹 UI Controls
-function openForm() {
-    document.getElementById("projectForm").classList.add("show");
-    document.getElementById("projectForm").classList.remove("hidden");
-}
-
-function closeForm() {
-    const form = document.getElementById("projectForm");
-    form.classList.remove("show");
-    form.classList.add("hidden");
-}
-    
-function openSubscriptionForm() {
-    document.getElementById("subscriptionModal").classList.add("show");
-}
-
-function closeSubscriptionForm() {
-    document.getElementById("subscriptionModal").classList.remove("show");
+        await getFeatures(); // refresh plan info
+        loadProjects();
+    } catch (err) { console.error(err); alert("Server error"); }
 }
 </script>
 </body>
