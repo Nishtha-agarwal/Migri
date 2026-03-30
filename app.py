@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Blueprint
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from config import Config
 from extensions import db, jwt
@@ -8,8 +8,11 @@ from routes.auth import auth_bp
 from routes.features import features_bp
 from routes.projects import project_bp
 from werkzeug.utils import secure_filename
+from extensions import db
 import os
 from flask_login import LoginManager
+from flask_jwt_extended import create_access_token, set_access_cookies, generate_password_hash, check_password_hash
+from sqlalchemy.exc import IntegrityError
 
 JWT_TOKEN_LOCATION = ["headers"]
 JWT_HEADER_NAME = "Authorization"
@@ -43,10 +46,38 @@ def load_user(user_id):
 def home():
     return render_template('index.html')
 
+# ---------------- REGISTER ----------------
+@app.route("/api/register", methods=["POST"])
+def register():
+    data = request.json
+    username = data.get("username")
+    password = data.get("tenant_id")  # 🔹 typo fix in actual code: tenant_id separate
+    tenant_id = data.get("tenant_id")
+    if not username or not data.get("password") or not tenant_id:
+        return jsonify({"error": "All fields are required"}), 400
+    if username in users_db:
+        return jsonify({"error": "Username already exists"}), 400
+    password_hash = generate_password_hash(data.get("password"))
+    users_db[username] = {"password_hash": password_hash, "tenant_id": tenant_id}
+    return jsonify({"msg": "Registration successful"}), 201
+
+# ---------------- LOGIN ----------------
+@app.route("/api/login", methods=["POST"])
+def login():
+    data = request.json
+    username = data.get("username")
+    password = data.get("password")
+    user = users_db.get(username)
+    if not user or not check_password_hash(user["password_hash"], password):
+        return jsonify({"error": "Invalid username or password"}), 401
+    session["username"] = username
+    session["tenant_id"] = user["tenant_id"]
+    return jsonify({"msg": "Login successful"}), 200
+
 @app.route('/dashboard1')
 def dashboard1():
     return render_template('dashboard1.html')  
-
+    
 @app.route('/dashboard2')
 def dashboard2():
     return render_template('dashboard2.html')
