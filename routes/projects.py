@@ -1,7 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
 from models import *
-from extensions import db
 from decorators.feature_check import require_feature
 
 project_bp = Blueprint('project', __name__)
