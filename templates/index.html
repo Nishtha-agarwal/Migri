@@ -71,25 +71,29 @@ async function register(){
 
 // LOGIN
 async function login(){
-    const username=document.getElementById("login_username").value;
-    const password=document.getElementById("login_password").value;
-    if(!username||!password){ showToast("Enter credentials"); return; }
+    const username = document.getElementById("login_username").value;
+    const password = document.getElementById("login_password").value;
+    if(!username || !password){
+        showToast("Enter credentials");
+        return;
+    }
     try{
-        const res=await fetch(`${BASE_URL}/api/login`,{
+        const res = await fetch(`${BASE_URL}/api/login`,{
             method:"POST",
             headers:{"Content-Type":"application/json"},
-            credentials:"include",
-            body:JSON.stringify({username,password})
+            body: JSON.stringify({username, password})
         });
-        const data=await res.json().catch(()=>({}));
+        const data = await res.json().catch(()=>({}));
         if(!res.ok){ 
-            showToast(data.error||"Login failed"); return; 
+            showToast(data.msg || "Login failed"); 
+            return; 
         }
         localStorage.setItem("token", data.access_token);
-        showToast(data.msg||"Login successful");
+        showToast("Login successful");
         setTimeout(()=>window.location.href="/dashboard",1000);
     }catch(err){ 
-        console.error(err); showToast("Server unreachable"); 
+        console.error(err); 
+        showToast("Server unreachable"); 
     }
 }
 
