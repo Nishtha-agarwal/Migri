@@ -79,8 +79,8 @@ def login():
         return jsonify({"error": "User not found"}), 401
     if not check_password_hash(user.password, password):
         return jsonify({"error": "Wrong password"}), 401
-    access_token = create_access_token(identity=user.id)
-    refresh_token = create_refresh_token(identity=user.id)
+    access_token = create_access_token(identity=str(user.id))
+    refresh_token = create_refresh_token(identity=str(user.id))
     response = jsonify({"msg": "login successful"})
     set_access_cookies(response, access_token)
     return jsonify({
