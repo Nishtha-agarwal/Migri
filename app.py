@@ -73,18 +73,23 @@ def register():
 
 @app.route("/api/login", methods=["POST"])
 def login():
-    data = request.get_json()
-    username = data.get("username")
-    password = data.get("password")
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return jsonify({"error": "User not found"}), 401
-    if not check_password_hash(user.password, password):
-        return jsonify({"error": "Wrong password"}), 401
-    access_token = create_access_token(identity=user.id)
-    response = jsonify({"msg": "Login successful"})
-    set_access_cookies(response, access_token)  # 🔥 THIS IS THE KEY
-    return response
+    try:
+        data = request.get_json() or {}
+        username = data.get("username")
+        password = data.get("password")
+        print("LOGIN DATA:", data)  # 👈 debug
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 401
+        if not check_password_hash(user.password, password):
+            return jsonify({"error": "Wrong password"}), 401
+        access_token = create_access_token(identity=user.id)
+        response = jsonify({"msg": "Login successful"})
+        set_access_cookies(response, access_token)
+        return response
+    except Exception as e:
+        print("🔥 LOGIN ERROR:", str(e))
+        return jsonify({"error": str(e)}), 500
     
 @app.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True)
