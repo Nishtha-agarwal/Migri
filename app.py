@@ -7,10 +7,11 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os
 from flask_login import LoginManager
-from flask_jwt_extended import get_jwt_identity, create_access_token, JWTManager, create_refresh_token, set_access_cookies, jwt_required, unset_jwt_cookies
+from flask_jwt_extended import get_jwt_identity, create_access_token, JWTManager, create_refresh_token
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
 from datetime import timedelta
+from flask_jwt_extended import set_access_cookies, jwt_required, unset_jwt_cookies
 
 JWT_TOKEN_LOCATION = ["headers"]
 JWT_HEADER_NAME = "Authorization"
@@ -24,6 +25,7 @@ app.config["JWT_COOKIE_SECURE"] = True   # Render = HTTPS
 app.config["JWT_COOKIE_SAMESITE"] = "None"        
 app.config["JWT_ACCESS_COOKIE_PATH"] = ["headers"]
 app.config["JWT_COOKIE_CSRF_PROTECT"] = False
+app.config["JWT_SECRET_KEY"] = "super-secret-key"
 JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
 login_manager = LoginManager()
