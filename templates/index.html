@@ -2,222 +2,83 @@
 <html>
 <head>
     <title>SaaS</title>
-
     <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(-45deg, #1e3c72, #2a5298, #00c6ff, #0072ff);
-            background-size: 400% 400%;
-            animation: gradientBG 10s ease infinite;
-        }
-
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .card {
-            width: 360px;
-            backdrop-filter: blur(15px);
-            background: rgba(255,255,255,0.1);
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            color: white;
-        }
-
-        h2 {
-            text-align: center;
-        }
-
-        .input-group {
-            position: relative;
-            margin: 12px 0;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
-            outline: none;
-        }
-
-        .toggle-pass {
-            position: absolute;
-            right: 10px;
-            top: 10px;
-            cursor: pointer;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            background: #00c6ff;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        button:hover {
-            background: #0072ff;
-        }
-
-        .switch {
-            text-align: center;
-            margin-top: 10px;
-            cursor: pointer;
-            font-size: 14px;
-            color: #ddd;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        /* 🔔 Toast */
-        #toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: black;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            display: none;
-        }
+        /* Your existing gradient & card styles */
+        body { margin:0; font-family:'Segoe UI', sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; background: linear-gradient(-45deg,#1e3c72,#2a5298,#00c6ff,#0072ff); background-size:400% 400%; animation: gradientBG 10s ease infinite; }
+        @keyframes gradientBG {0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+        .card{width:360px;backdrop-filter:blur(15px);background:rgba(255,255,255,0.1);border-radius:16px;padding:25px;color:white;box-shadow:0 10px 30px rgba(0,0,0,0.3);}
+        h2{text-align:center} input{width:100%;padding:10px;border-radius:8px;border:none;outline:none;margin:10px 0;} button{width:100%;padding:10px;border:none;border-radius:8px;background:#00c6ff;color:white;font-weight:bold;cursor:pointer;transition:.3s;} button:hover{background:#0072ff} .hidden{display:none;} .switch{text-align:center;margin-top:10px;cursor:pointer;font-size:14px;color:#ddd;} #toast{position:fixed;bottom:20px;right:20px;background:black;color:white;padding:12px 20px;border-radius:8px;display:none;}
     </style>
 </head>
-
 <body>
 <div class="card">
-    <!-- LOGIN -->
     <div id="loginBox">
         <h2>Login</h2>
         <input id="login_username" placeholder="Username">
-        <div class="input-group">
-            <input id="login_password" type="password" placeholder="Password">
-            <span class="toggle-pass" onclick="togglePassword('login_password')">👁</span>
-        </div>
+        <input id="login_password" type="password" placeholder="Password">
         <button onclick="login()">Login</button>
         <div class="switch" onclick="showRegister()">Create account →</div>
     </div>
-
-    <!-- REGISTER -->
     <div id="registerBox" class="hidden">
         <h2>Register</h2>
         <input id="reg_username" placeholder="Username">
-        <div class="input-group">
-            <input id="reg_password" type="password" placeholder="Password">
-            <span class="toggle-pass" onclick="togglePassword('reg_password')">👁</span>
-        </div>
+        <input id="reg_password" type="password" placeholder="Password">
         <input id="reg_tenant" placeholder="Tenant ID">
         <button onclick="register()">Register</button>
         <div class="switch" onclick="showLogin()">← Back to login</div>
     </div>
 </div>
 <div id="toast"></div>
-    
-<script>
-const BASE_URL = window.location.origin;
-    
-// 🔁 Toggle
-function showRegister() {
-    loginBox.classList.add("hidden");
-    registerBox.classList.remove("hidden");
-}
-function showLogin() {
-    registerBox.classList.add("hidden");
-    loginBox.classList.remove("hidden");
-}
-// 👁 Toggle Password
-function togglePassword(id) {
-    const input = document.getElementById(id);
-    input.type = input.type === "password" ? "text": "password";
-}
 
-// 🔔 Toast
-function showToast(msg) {
+<script>
+const BASE_URL = window.location.origin; // works for local & deployed
+
+function showToast(msg){
     const toast = document.getElementById("toast");
     toast.innerText = msg;
-    toast.style.display = "block";
-
-    setTimeout(() => {
-        toast.style.display = "none";
-    }, 2000);
+    toast.style.display="block";
+    setTimeout(()=>toast.style.display="none",2000);
 }
 
-// 🔹 REGISTER
-async function register() {
-    const username = document.getElementById("reg_username").value;
-    const password = document.getElementById("reg_password").value;
-    const tenant = document.getElementById("reg_tenant").value;
-    if (!username || !password || !tenant) {
-        showToast("Fill all fields");
-        return;
-    }
-    try {
-        const res = await fetch(`${BASE_URL}/api/register`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include", // ensures cookies are sent
-            body: JSON.stringify({ username, password, tenant_id: tenant })
+function showRegister(){ document.getElementById("loginBox").classList.add("hidden"); document.getElementById("registerBox").classList.remove("hidden"); }
+function showLogin(){ document.getElementById("registerBox").classList.add("hidden"); document.getElementById("loginBox").classList.remove("hidden"); }
+
+async function register(){
+    const username=document.getElementById("reg_username").value;
+    const password=document.getElementById("reg_password").value;
+    const tenant=document.getElementById("reg_tenant").value;
+    if(!username||!password||!tenant){ showToast("Fill all fields"); return; }
+    try{
+        const res=await fetch(`${BASE_URL}/api/register`,{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({username,password,tenant_id:tenant}),
+            credentials:"include"
         });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-            showToast(data.msg || data.error || "Registration failed");
-            return;
-        }
-        showToast("Registration successful ✅");
-        setTimeout(() => {
-            showLogin(); // assumes you have this function to toggle login/register
-        }, 1000);
-    } catch (err) {
-        console.error(err);
-        showToast("Server unreachable. Try again later.");
-    }
+        const data=await res.json().catch(()=>({}));
+        if(!res.ok){ showToast(data.error||"Registration failed"); return; }
+        showToast(data.msg);
+        setTimeout(showLogin,1000);
+    }catch(err){ console.error(err); showToast("Server unreachable"); }
 }
 
-// 🔹 LOGIN
-async function login() {
-    const username = document.getElementById("login_username").value;
-    const password = document.getElementById("login_password").value;
-    if (!username || !password) {
-        showToast("Enter credentials");
-        return;
-    }
-    try {
-        const res = await fetch(`${BASE_URL}/api/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include", // ensures cookies are sent
-            body: JSON.stringify({ username, password })
+async function login(){
+    const username=document.getElementById("login_username").value;
+    const password=document.getElementById("login_password").value;
+    if(!username||!password){ showToast("Enter credentials"); return; }
+    try{
+        const res=await fetch(`${BASE_URL}/api/login`,{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({username,password}),
+            credentials:"include"
         });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-            showToast(data.msg || data.error || "Login failed");
-            return;
-        }
-        showToast("Login successful 🚀");
-        setTimeout(() => {
-            window.location.href = "/dashboard";
-        }, 1000);
-    } catch (err) {
-        console.error(err);
-        showToast("Server unreachable. Try again later.");
-    }
+        const data=await res.json().catch(()=>({}));
+        if(!res.ok){ showToast(data.error||"Login failed"); return; }
+        showToast(data.msg);
+        setTimeout(()=>window.location.href="/dashboard",1000);
+    }catch(err){ console.error(err); showToast("Server unreachable"); }
 }
 </script>
-
 </body>
 </html>
