@@ -100,47 +100,34 @@
 </head>
 
 <body>
-
 <div class="card">
-
     <!-- LOGIN -->
     <div id="loginBox">
         <h2>Login</h2>
-
         <input id="login_username" placeholder="Username">
-
         <div class="input-group">
             <input id="login_password" type="password" placeholder="Password">
             <span class="toggle-pass" onclick="togglePassword('login_password')">👁</span>
         </div>
-
         <button onclick="login()">Login</button>
-
         <div class="switch" onclick="showRegister()">Create account →</div>
     </div>
 
     <!-- REGISTER -->
     <div id="registerBox" class="hidden">
         <h2>Register</h2>
-
         <input id="reg_username" placeholder="Username">
-
         <div class="input-group">
             <input id="reg_password" type="password" placeholder="Password">
             <span class="toggle-pass" onclick="togglePassword('reg_password')">👁</span>
         </div>
-
         <input id="reg_tenant" placeholder="Tenant ID">
-
         <button onclick="register()">Register</button>
-
         <div class="switch" onclick="showLogin()">← Back to login</div>
     </div>
-
 </div>
-
 <div id="toast"></div>
-
+    
 <script>
 // 🔁 Toggle
 function showRegister() {
@@ -180,7 +167,7 @@ async function register() {
     }
 
     try {
-        const res = await fetch("http://127.0.0.1:8000/api/register", {
+        const res = await fetch("http://127.0.0.1:8000", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
@@ -208,7 +195,7 @@ async function login() {
     }
 
     try {
-        const res = await fetch("http://127.0.0.1:8000/api/login", {
+        const res = await fetch("http://127.0.0.1:8000", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
