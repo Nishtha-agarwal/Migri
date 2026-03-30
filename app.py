@@ -9,28 +9,29 @@ from routes.projects import project_bp
 from werkzeug.utils import secure_filename
 import os
 from flask_login import LoginManager
-from flask_jwt_extended import create_access_token, set_access_cookies, jwt_required, unset_jwt_cookies
+from flask_jwt_extended import create_access_token, JWTManager, set_access_cookies, jwt_required, unset_jwt_cookies
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
+
 
 JWT_TOKEN_LOCATION = ["headers"]
 JWT_HEADER_NAME = "Authorization"
 JWT_HEADER_TYPE = "Bearer"
 UPLOAD_FOLDER = "uploads"
 app = Flask(__name__)
-app.config.from_object(Config)
 app.config["JWT_TOKEN_LOCATION"] = ["cookies"]  
 app.config["JWT_ACCESS_COOKIE_NAME"] = "access_token_cookie" 
 app.config["JWT_COOKIE_SECURE"] = False          
 app.config["JWT_ACCESS_COOKIE_PATH"] = "/"
 app.config["JWT_COOKIE_CSRF_PROTECT"] = False
+CORS(app, supports_credentials=True)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
-CORS(app, supports_credentials=True)
+app.config.from_object(Config)
+jwt = JWTManager(app)
 db.init_app(app)
-jwt.init_app(app)
 with app.app_context():
     db.create_all()
     
