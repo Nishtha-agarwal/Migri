@@ -59,41 +59,86 @@
 window.onload = () => {
     loadProjects();
 };
-
+const token = localStorage.getItem("token");
+    
 // 🔹 Get Features
 async function getFeatures() {
-    const res = await fetch('/api/features', {
+    const token = localStorage.getItem("token");
+    const res = await fetch('/api/features', { 
+        method: "GET",
         headers: {
-            'Authorization': 'Bearer ' 
+            "Authorization": "Bearer " + token
         }
     });
-
+    let text = await res.text();
     let data;
     try {
-        data = await res.json();
+        data = JSON.parse(text);
     } catch {
-        alert("Invalid server response");
+        alert("❌ Server error (not JSON)");
+        console.error(text);
         return;
     }
-
     if (!res.ok) {
         alert(data.msg || "Error");
         return;
     }
-
-    // ✅ FIXED
     document.getElementById("planInfo").innerHTML = `
         <p><b>Plan Name:</b> ${data.plan.name}</p>
         <p><b>Max Usage:</b> ${data.plan.max_usage}</p>
         <p><b>Features:</b> ${data.features.join(", ")}</p>
-    `;
-
-    document.getElementById("subInfo").innerHTML = `
-        <p><b>Subscription ID:</b> ${data.subscription.id}</p>
-        <p><b>Status:</b> ${data.subscription.status}</p>
+        <button onclick="openSubscriptionForm()">🚀 Upgrade to PRO</button>
     `;
 }
-
+    
+//Load Project
+async function loadProjects() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Please login first");
+        window.location.href = "/";
+        return;
+    }
+    try {
+        const res = await fetch('/api/projects', {
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        });
+        const text = await res.text();
+        let projects;
+        try {
+            projects = JSON.parse(text);
+        } catch {
+            alert("❌ Server error loading projects");
+            console.error(text);
+            return;
+        }
+        if (!res.ok) {
+            alert(projects.msg || "Error loading projects");
+            return;
+        }
+        const tbody = document.querySelector("#projectsTable tbody");
+        tbody.innerHTML = "";
+        projects.forEach((p, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${p.name}</td>
+                    <td>
+                        <button onclick="renameProject(${p.id}, '${p.name}')">✏️</button>
+                        <button onclick="deleteProject(${p.id})">❌</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error(err);
+        alert("Server unreachable");
+    }
+}
+    
 // 🔹 Create Project
 async function submitProject() {
     const name = document.getElementById("projectName").value;
@@ -101,111 +146,93 @@ async function submitProject() {
         alert("Enter project name");
         return;
     }
-    const res = await fetch('/api/create_project', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer '
-        },
-        body: JSON.stringify({ name })
-    });
-    let data = await res.json();
-    if (res.status === 403) {
-        alert("🚫 " + data.msg);
-        return;
-    }
-    if (!res.ok) {
-        alert("Error");
-        return;
-    }
-    alert("✅ " + data.msg);
-    closeForm();
-    document.getElementById("projectName").value = "";
-    loadProjects();
-}
-
-// 🔹 Load Projects
-async function loadProjects() {
-    const res = await fetch('/api/projects', {
-        headers: {
-            'Authorization': 'Bearer '
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch('/api/create_project', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ name })
+        });
+        const data = await res.json();
+        if (res.status === 403) {
+            alert("🚫 " + data.msg);
+            return;
         }
-    });
-
-    const projects = await res.json();
-
-    const tbody = document.querySelector("#projectsTable tbody");
-    tbody.innerHTML = "";
-
-    projects.forEach((p, index) => {
-        tbody.innerHTML += `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${p.name}</td>
-                <td>
-                    <button onclick="renameProject(${p.id}, '${p.name}')">✏️</button>
-                    <button onclick="deleteProject(${p.id})">❌</button>
-                </td>
-            </tr>
-        `;
-    });
+        if (!res.ok) {
+            alert(data.msg || "Error");
+            return;
+        }
+        alert("✅ " + data.msg);
+        closeForm();
+        document.getElementById("projectName").value = "";
+        loadProjects();
+    } catch (err) {
+        console.error(err);
+        alert("Server error");
+    }
 }
 
 // 🔹 Delete
 async function deleteProject(id) {
     if (!confirm("Delete this project?")) return;
-
-    const res = await fetch(`/api/delete_project/${id}`, {
-        method: "DELETE",
-        headers: {
-            'Authorization': 'Bearer ' 
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch(`/api/delete_project/${id}`, {
+            method: "DELETE",
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            alert(data.msg);
+            return;
         }
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-        alert(data.msg);
-        return;
+        alert("🗑 " + data.msg);
+        loadProjects();
+    } catch (err) {
+        console.error(err);
+        alert("Server error");
     }
-
-    alert("🗑 " + data.msg);
-    loadProjects();
 }
 
 // 🔹 Rename
 async function renameProject(id, oldName) {
     const newName = prompt("Enter new name:", oldName);
-
     if (!newName || newName === oldName) return;
-
-    const res = await fetch(`/api/update_project/${id}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " 
-        },
-        body: JSON.stringify({ name: newName })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-        alert(data.msg);
-        return;
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch(`/api/update_project/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({ name: newName })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            alert(data.msg);
+            return;
+        }
+        alert("✏️ " + data.msg);
+        loadProjects();
+    } catch (err) {
+        console.error(err);
+        alert("Server error");
     }
-
-    alert("✏️ " + data.msg);
-    loadProjects();
 }
 
-// 🔹 UI
+// 🔹 UI Controls
 function openForm() {
-    document.getElementById("projectForm").style.display = "block";
+    document.getElementById("projectForm").classList.add("show");
 }
 
 function closeForm() {
-    document.getElementById("projectForm").style.display = "none";
+    document.getElementById("projectForm").classList.remove("show");
 }
 </script>
 </body>
