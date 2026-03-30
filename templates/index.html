@@ -11,6 +11,8 @@
     </style>
 </head>
 <body>
+<button id="logoutBtn" onclick="logout()" style="position:absolute; top:20px; right:20px;">Logout</button>
+<script>
 <div class="card">
     <div id="loginBox">
         <h2>Login</h2>
@@ -78,6 +80,48 @@ async function login(){
         showToast(data.msg);
         setTimeout(()=>window.location.href="/dashboard",1000);
     }catch(err){ console.error(err); showToast("Server unreachable"); }
+}
+async function logout(){
+    try {
+        const res = await fetch(`${BASE_URL}/api/logout`, {
+            method: "POST",
+            credentials: "include"
+        });
+        if(res.ok){
+            showToast("Logged out ✅");
+            setTimeout(()=> window.location.href = "/", 1000);
+        }
+    } catch(err){
+        console.error(err);
+        showToast("Logout failed");
+    }
+}
+
+// Wrapper function to fetch protected data with auto-redirect
+async function fetchWithAuth(url, options = {}){
+    options.credentials = "include"; // send cookies
+    try {
+        const res = await fetch(url, options);
+        if(res.status === 401){
+            // JWT expired or invalid
+            showToast("Session expired. Redirecting to login...");
+            setTimeout(()=> window.location.href = "/", 1500);
+            return null;
+        }
+        return await res.json();
+    } catch(err){
+        console.error(err);
+        showToast("Server unreachable");
+        return null;
+    }
+}
+
+// Example usage: fetch usage or dashboard data
+async function loadDashboard(){
+    const data = await fetchWithAuth(`${BASE_URL}/dashboard`);
+    if(data){
+        console.log(data);
+    }
 }
 </script>
 </body>
