@@ -1,6 +1,7 @@
 from app import app
 from models import *
 from models import db
+from werkzeug.security import generate_password_hash
 
 def run_seed():
     # 🔹 Tenants
@@ -10,8 +11,8 @@ def run_seed():
     db.session.commit()
 
     # 🔹 Users
-    u1 = User(username="abc", password="abc", tenant_id=t1.id, plan="free")
-    u2 = User(username="xyz", password="xyz", tenant_id=t2.id, plan="pro")
+    u1 = User(username="abc", password=generate_password_hash("abc"), tenant_id=t1.id, plan="free")
+    u2 = User(username="xyz", password=generate_password_hash("xyz"), tenant_id=t2.id, plan="pro")
     db.session.add_all([u1, u2])
     db.session.commit()
 
