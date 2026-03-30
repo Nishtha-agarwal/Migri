@@ -1,6 +1,4 @@
-from app import app
-from models import *
-from models import db
+from models import db, *
 from werkzeug.security import generate_password_hash
 
 def run_seed():
