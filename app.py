@@ -6,6 +6,7 @@ from models import db, User, Tenant, Plan, Project, Feature, PlanFeature, Subscr
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os
+from seed import run_seed
 from flask_login import LoginManager
 from flask_jwt_extended import get_jwt_identity, create_access_token, JWTManager, create_refresh_token
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -37,6 +38,7 @@ jwt = JWTManager(app)
 db.init_app(app)
 with app.app_context():
     db.create_all()
+    run_seed()
     
 @login_manager.user_loader
 def load_user(user_id):
