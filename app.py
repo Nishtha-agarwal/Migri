@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 from extensions import db
 import os
 from flask_login import LoginManager
-from flask_jwt_extended import create_access_token, set_access_cookies, jwt_required
+from flask_jwt_extended import create_access_token, set_access_cookies, jwt_required, unset_jwt_cookies
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
 
@@ -80,7 +80,7 @@ def login():
     return resp, 200
 
 # Logout
-@app.route('/api/logout', methods=['POST'])
+@app.route("/api/logout", methods=["POST"])
 def logout():
     resp = jsonify({"msg": "Logged out"})
     unset_jwt_cookies(resp)
