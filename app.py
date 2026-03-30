@@ -43,7 +43,7 @@ def load_user(user_id):
 
 @app.route('/')
 def home():
-    return redirect("index.html")
+    return render_template('index.html')
 
 # Register
 @app.route("/api/register", methods=["POST"])
