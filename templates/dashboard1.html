@@ -68,6 +68,20 @@
         background-color: #f1f1f1;
         transition: 0.2s;
     }
+    #projectForm,
+    #subscriptionModal {
+        display: none;
+        opacity: 0;
+        transform: scale(0.9);
+        transition: all 0.3s ease;
+    }
+
+    #projectForm.show,
+    #subscriptionModal.show {
+        display: block;
+        opacity: 1;
+        transform: scale(1);
+    }
 </style>
 
 <script>
@@ -75,11 +89,16 @@
 window.onload = () => {
     loadProjects();
 };
-
+const token = localStorage.getItem("token");
+    
 // 🔹 Get Features
 async function getFeatures() {
+    const token = localStorage.getItem("token");
     const res = await fetch('/api/features', { 
-        credentials: "include"
+        method: "GET",
+        headers: {
+            "Authorization": "Bearer " + token
+        }
     });
     let text = await res.text();
     let data;
@@ -104,41 +123,50 @@ async function getFeatures() {
 
 // 🔹 Load Projects
 async function loadProjects() {
-    const res = await fetch('/api/projects', {
-        credentials: "include"
-    });
-
-    let text = await res.text();
-    let projects;
-
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Please login first");
+        window.location.href = "/";
+        return;
+    }
     try {
-        projects = JSON.parse(text);
-    } catch {
-        alert("❌ Server error loading projects");
-        console.error(text);
-        return;
+        const res = await fetch('/api/projects', {
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        });
+        const text = await res.text();
+        let projects;
+        try {
+            projects = JSON.parse(text);
+        } catch {
+            alert("❌ Server error loading projects");
+            console.error(text);
+            return;
+        }
+        if (!res.ok) {
+            alert(projects.msg || "Error loading projects");
+            return;
+        }
+        const tbody = document.querySelector("#projectsTable tbody");
+        tbody.innerHTML = "";
+        projects.forEach((p, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${p.name}</td>
+                    <td>
+                        <button onclick="renameProject(${p.id}, '${p.name}')">✏️</button>
+                        <button onclick="deleteProject(${p.id})">❌</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error(err);
+        alert("Server unreachable");
     }
-
-    if (!res.ok) {
-        alert(projects.msg || "Error loading projects");
-        return;
-    }
-
-    const tbody = document.querySelector("#projectsTable tbody");
-    tbody.innerHTML = "";
-
-    projects.forEach((p, index) => {
-        tbody.innerHTML += `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${p.name}</td>
-                <td>
-                    <button onclick="renameProject(${p.id}, '${p.name}')">✏️</button>
-                    <button onclick="deleteProject(${p.id})">❌</button>
-                </td>
-            </tr>
-        `;
-    });
 }
 
 // 🔹 Create Project
@@ -148,131 +176,147 @@ async function submitProject() {
         alert("Enter project name");
         return;
     }
-    const res = await fetch('/api/create_project', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        credentials: "include",
-        body: JSON.stringify({ name })
-    });
-    const data = await res.json();
-    if (res.status === 403) {
-        alert("🚫 Limit reached! Upgrade to Pro.");
-        openSubscriptionForm();  
-        return;
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch('/api/create_project', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ name })
+        });
+        const data = await res.json();
+        if (res.status === 403) {
+            alert("🚫 " + data.msg);
+            return;
+        }
+        if (!res.ok) {
+            alert(data.msg || "Error");
+            return;
+        }
+        alert("✅ " + data.msg);
+        closeForm();
+        document.getElementById("projectName").value = "";
+        loadProjects();
+    } catch (err) {
+        console.error(err);
+        alert("Server error");
     }
-    if (!res.ok) {
-        alert("Error");
-        return;
-    }
-    alert("✅ " + data.msg);
-    closeForm();
-    document.getElementById("projectName").value = "";
-    loadProjects();
 }
-
+    
 // 🔹 Delete Project
 async function deleteProject(id) {
     if (!confirm("Delete this project?")) return;
-
-    const res = await fetch(`/api/delete_project/${id}`, {
-        method: "DELETE",
-        credentials: "include"
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-        alert(data.msg);
-        return;
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch(`/api/delete_project/${id}`, {
+            method: "DELETE",
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            alert(data.msg);
+            return;
+        }
+        alert("🗑 " + data.msg);
+        loadProjects();
+    } catch (err) {
+        console.error(err);
+        alert("Server error");
     }
-
-    alert("🗑 " + data.msg);
-    loadProjects();
 }
 
 // 🔹 Rename Project
 async function renameProject(id, oldName) {
     const newName = prompt("Enter new name:", oldName);
-
     if (!newName || newName === oldName) return;
-
-    const res = await fetch(`/api/update_project/${id}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        credentials: "include",
-        body: JSON.stringify({ name: newName })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-        alert(data.msg);
-        return;
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch(`/api/update_project/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({ name: newName })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            alert(data.msg);
+            return;
+        }
+        alert("✏️ " + data.msg);
+        loadProjects();
+    } catch (err) {
+        console.error(err);
+        alert("Server error");
     }
-
-    alert("✏️ " + data.msg);
-    loadProjects();
 }
 
 // 🔹 Subscription (FIXED)
 async function submitSubscription() {
     const file = document.getElementById("paymentProof").files[0];
-
     if (!file) {
         alert("Upload PDF");
         return;
     }
-
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Session expired. Please login again.");
+        window.location.href = "/";
+        return;
+    }
     const formData = new FormData();
     formData.append("amount", 500);
     formData.append("file", file);
-
-    const res = await fetch('/api/subscribe', {
-        method: "POST",
-        credentials: "include",
-        body: formData
-    });
-
-    let text = await res.text();
-    let data;
-
     try {
-        data = JSON.parse(text);
-    } catch {
-        alert("❌ Server crashed (not JSON)");
-        console.error(text);
-        return;
+        const res = await fetch('/api/subscribe', {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + token
+            },
+            body: formData
+        });
+        const text = await res.text();
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch {
+            alert("❌ Server crashed (not JSON)");
+            console.error(text);
+            return;
+        }
+        if (!res.ok) {
+            alert(data.msg || "Subscription failed");
+            return;
+        }
+        alert("🚀 " + data.msg);
+        closeSubscriptionForm();
+        window.location.href = "/dashboard2";
+    } catch (err) {
+        console.error(err);
+        alert("Server error");
     }
-
-    if (!res.ok) {
-        alert(data.msg || "Subscription failed");
-        return;
-    }
-
-    alert("🚀 " + data.msg);
-    closeSubscriptionForm();
-    window.location.href = "/dashboard2";
 }
 
 // 🔹 UI Controls
 function openForm() {
-    document.getElementById("projectForm").style.display = "block";
+    document.getElementById("projectForm").classList.add("show");
 }
 
 function closeForm() {
-    document.getElementById("projectForm").style.display = "none";
+    document.getElementById("projectForm").classList.remove("show");
 }
 
 function openSubscriptionForm() {
-    document.getElementById("subscriptionModal").style.display = "block";
+    document.getElementById("subscriptionModal").classList.add("show");
 }
 
 function closeSubscriptionForm() {
-    document.getElementById("subscriptionModal").style.display = "none";
+    document.getElementById("subscriptionModal").classList.remove("show");
 }
 </script>
 </body>
