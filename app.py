@@ -71,17 +71,23 @@ def register():
         print("ERROR:", str(e))   # 👈 CHECK THIS IN RENDER LOGS
         return jsonify({"error": "Server error"}), 500
 
-# Login
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.get_json()
     username = data.get("username")
     password = data.get("password")
-    if not username or not password:
-        return jsonify({"error": "Enter credentials"}), 400
+    print("\n--- LOGIN DEBUG ---")
+    print("Entered username:", username)
+    print("Entered password:", password)
     user = User.query.filter_by(username=username).first()
-    if not user or not check_password_hash(user.password, password):
-        return jsonify({"error": "Invalid credentials"}), 401
+    print("User found:", user)
+    if user:
+        print("Stored password:", user.password)
+        print("Password match:", check_password_hash(user.password, password))
+    if not user:
+        return jsonify({"error": "User not found"}), 401
+    if not check_password_hash(user.password, password):
+        return jsonify({"error": "Wrong password"}), 401
     access_token = create_access_token(identity=user.id)
     resp = jsonify({"msg": "Login successful"})
     set_access_cookies(resp, access_token)
