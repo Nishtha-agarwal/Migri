@@ -82,10 +82,15 @@ async function login(){
             body:JSON.stringify({username,password})
         });
         const data=await res.json().catch(()=>({}));
-        if(!res.ok){ showToast(data.error||"Login failed"); return; }
+        if(!res.ok){ 
+            showToast(data.error||"Login failed"); return; 
+        }
+        localStorage.setItem("token", data.access_token);
         showToast(data.msg||"Login successful");
         setTimeout(()=>window.location.href="/dashboard",1000);
-    }catch(err){ console.error(err); showToast("Server unreachable"); }
+    }catch(err){ 
+        console.error(err); showToast("Server unreachable"); 
+    }
 }
 
 // LOGOUT
