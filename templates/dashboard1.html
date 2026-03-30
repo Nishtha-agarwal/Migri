@@ -97,7 +97,7 @@ async function getFeatures() {
     const res = await fetch('/api/features', { 
         method: "GET",
         headers: {
-            "Authorization": "Bearer " + token
+            Authorization: "Bearer " + token
         },
         credentials: "include"
     });
@@ -134,7 +134,7 @@ async function loadProjects() {
         const res = await fetch('/api/projects', {
             method: "GET",
             headers: {
-                "Authorization": "Bearer " + token
+                Authorization: "Bearer " + token
             },
             credentials: "include"
         });
@@ -184,7 +184,7 @@ async function submitProject() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
+                Authorization: "Bearer" + token
             },
             credentials: "include",
             body: JSON.stringify({ name })
@@ -216,7 +216,7 @@ async function deleteProject(id) {
         const res = await fetch(`/api/delete_project/${id}`, {
             method: "DELETE",
             headers: {
-                'Authorization': 'Bearer ' + token
+                Authorization: "Bearer" + token
             },
             credentials: "include"
         });
@@ -243,7 +243,7 @@ async function renameProject(id, oldName) {
             method: "PUT",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + token
+                Authorization: "Bearer" + token
             },
             credentials: "include",
             body: JSON.stringify({ name: newName })
@@ -281,7 +281,7 @@ async function submitSubscription() {
         const res = await fetch('/api/subscribe', {
             method: "POST",
             headers: {
-                "Authorization": "Bearer " + token
+                Authorization: "Bearer" + token
             },
             credentials: "include",
             body: formData
