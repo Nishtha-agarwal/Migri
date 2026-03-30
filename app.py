@@ -55,12 +55,10 @@ def register():
         return jsonify({"error": "All fields are required"}), 400
     if User.query.filter_by(username=username).first():
         return jsonify({"error": "Username already exists"}), 400
-
     hashed_pw = generate_password_hash(password)
     user = User(username=username, password=hashed_pw, tenant_id=tenant_id)
     db.session.add(user)
     db.session.commit()
-
     return jsonify({"msg": "Registration successful"}), 201
 
 @app.route("/api/login", methods=["POST"])
@@ -73,8 +71,8 @@ def login():
         return jsonify({"error": "Invalid username or password"}), 401
     access_token = create_access_token(identity=user.id)
     resp = jsonify({"msg": "Login successful"})
-    set_access_cookies(resp, access_token)
-    return resp, 200
+    set_access_cookies(resp, access_token)  # ✅ cookie sent
+    return resp
 
 @app.route('/dashboard')
 @jwt_required()
