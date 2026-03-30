@@ -145,8 +145,9 @@ async function getFeatures() {
         <p><b>Plan Name:</b> ${data.plan.name}</p>
         <p><b>Max Usage:</b> ${data.plan.max_usage}</p>
         <p><b>Features:</b> ${data.features.join(", ")}</p>
-        <button onclick="openSubscriptionForm()">🚀 Upgrade to PRO</button>
+        ${data.plan.name !== "Free" ? "" : `<button onclick="openSubscriptionForm()">🚀 Upgrade to PRO</button>`}
     `;
+    document.querySelector("h1").innerText = "Dashboard_" + data.plan.name;
 }
 
 // 🔹 Load Projects
