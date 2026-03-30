@@ -10,9 +10,9 @@ from werkzeug.utils import secure_filename
 from extensions import db
 import os
 from flask_login import LoginManager
-from flask_jwt_extended import create_access_token, set_access_cookies, generate_password_hash, check_password_hash, jwt_required
-from sqlalchemy.exc import IntegrityError
+from flask_jwt_extended import create_access_token, set_access_cookies, jwt_required
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.exc import IntegrityError
 
 JWT_TOKEN_LOCATION = ["headers"]
 JWT_HEADER_NAME = "Authorization"
