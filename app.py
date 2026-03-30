@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, jsonify, Blueprint
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from config import Config
-from models import *
+import models
+from models import db, User, Tenant, Plan, Project, Feature, PlanFeature, Subscription, Usage
 from flask_cors import CORS
 from routes.features import features_bp
 from routes.projects import project_bp
@@ -44,26 +45,27 @@ def load_user(user_id):
 def home():
     return render_template('index.html')
 
-# Register
 @app.route("/api/register", methods=["POST"])
 def register():
     data = request.get_json()
     username = data.get("username")
     password = data.get("password")
-    tenant_id = data.get("tenant_id")
-    if not username or not password or not tenant_id:
+    if not username or not password:
         return jsonify({"error": "All fields required"}), 400
     if User.query.filter_by(username=username).first():
         return jsonify({"error": "Username already exists"}), 400
-    hashed_pw = generate_password_hash(password)  # from werkzeug.security
-    new_user = User(username=username, password=hashed_pw, tenant_id=tenant_id)
-    try:
-        db.session.add(new_user)
-        db.session.commit()
-        return jsonify({"msg": "Registration successful"}), 200
-    except Exception as e:
-        print("Register error:", e)
-        return jsonify({"error": "Server error"}), 500
+    tenant = Tenant(name=f"{username}_tenant")
+    db.session.add(tenant)
+    db.session.commit()
+    hashed_pw = generate_password_hash(password)
+    new_user = User(
+        username=username,
+        password=hashed_pw,
+        tenant_id=tenant.id
+    )
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({"msg": "Registration successful"}), 200
 
 # Login
 @app.route("/api/login", methods=["POST"])
