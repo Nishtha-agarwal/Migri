@@ -169,11 +169,6 @@ Database (SQLite / PostgreSQL)
 
 ## 👨‍💻 Author
 **Nishtha Agarwal**
-SaaS Backend Project – Flask
 
-## 🌐 Deployment
-🔗 **Live URL:** `<your-deployment-link>`
-
-> Recommended platforms:
-* Render
-* Railway
+## 🌐 Deployment(Render)
+🔗 **Live URL:** https://migri-3.onrender.com/
