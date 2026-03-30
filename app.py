@@ -24,7 +24,7 @@ app.config["JWT_ACCESS_COOKIE_NAME"] = "access_token_cookie"
 app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
 app.config["JWT_COOKIE_SECURE"] = True   # Render = HTTPS
 app.config["JWT_COOKIE_SAMESITE"] = "None"        
-app.config["JWT_ACCESS_COOKIE_PATH"] = ["headers"]
+app.config["JWT_ACCESS_COOKIE_PATH"] = "/"
 app.config["JWT_COOKIE_CSRF_PROTECT"] = False
 app.config["JWT_SECRET_KEY"] = "super-secret-key"
 JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
@@ -37,6 +37,7 @@ app.config.from_object(Config)
 jwt = JWTManager(app)
 db.init_app(app)
 with app.app_context():
+    db.drop_all() 
     db.create_all()
     run_seed()
     
