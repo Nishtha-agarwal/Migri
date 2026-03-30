@@ -43,7 +43,7 @@ def load_user(user_id):
 
 @app.route('/')
 def home():
-    return "Welcome to Migri!"
+    return redirect("index.html")
 
 # Register
 @app.route("/api/register", methods=["POST"])
