@@ -16,18 +16,20 @@ JWT_TOKEN_LOCATION = ["headers"]
 JWT_HEADER_NAME = "Authorization"
 JWT_HEADER_TYPE = "Bearer"
 UPLOAD_FOLDER = "uploads"
+
 app = Flask(__name__)
-app.config["JWT_TOKEN_LOCATION"] = ["cookies"]  
 app.config["JWT_ACCESS_COOKIE_NAME"] = "access_token_cookie" 
-app.config["JWT_COOKIE_SECURE"] = False          
-app.config["JWT_ACCESS_COOKIE_PATH"] = "/"
+app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
+app.config["JWT_COOKIE_SECURE"] = True   # Render = HTTPS
+app.config["JWT_COOKIE_SAMESITE"] = "None"        
+app.config["JWT_ACCESS_COOKIE_PATH"] = ["headers"]
 app.config["JWT_COOKIE_CSRF_PROTECT"] = False
 JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
-
+CORS(app, supports_credentials=True)
 app.config.from_object(Config)
 jwt = JWTManager(app)
 db.init_app(app)
@@ -77,8 +79,10 @@ def login():
         return jsonify({"error": "User not found"}), 401
     if not check_password_hash(user.password, password):
         return jsonify({"error": "Wrong password"}), 401
-    access_token = create_access_token(identity=str(user.id))
-    refresh_token = create_refresh_token(identity=str(user.id))
+    access_token = create_access_token(identity=user.id)
+    refresh_token = create_refresh_token(identity=user.id)
+    response = jsonify({"msg": "login successful"})
+    set_access_cookies(response, access_token)
     return jsonify({
         "msg": "Login successful",
         "access_token": access_token,
