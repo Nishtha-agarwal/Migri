@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, jsonify, Blueprint
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from config import Config
-from extensions import jwt
 from models import *
 from flask_cors import CORS
 from routes.features import features_bp
