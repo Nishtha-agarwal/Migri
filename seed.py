@@ -1,5 +1,6 @@
 from app import app
 from models import *
+from models import db
 
 def run_seed():
     # 🔹 Tenants
