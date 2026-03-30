@@ -219,13 +219,14 @@ function closeSubscriptionForm() { document.getElementById("subscriptionModal").
 // 🔹 Upgrade to PRO
 async function submitSubscription() {
     const file = document.getElementById("paymentProof").files[0];
-    if (!file) { alert("Upload PDF"); return; }
-
+    if (!file) { 
+        alert("Upload PDF"); 
+        return; 
+    }
     const token = localStorage.getItem("token");
     const formData = new FormData();
     formData.append("amount", 500);
     formData.append("file", file);
-
     try {
         const res = await fetch('/api/subscribe', {
             method: "POST",
@@ -234,13 +235,16 @@ async function submitSubscription() {
             body: formData
         });
         const data = await res.json();
-        if (!res.ok) { alert(data.msg || "Subscription failed"); return; }
-
+        if (!res.ok) { 
+            alert(data.msg || "Subscription failed"); 
+            return; 
+        }
         alert("🚀 " + data.msg);
-        closeSubscriptionForm();
-        await getFeatures(); // refresh plan info
-        loadProjects();
-    } catch (err) { console.error(err); alert("Server error"); }
+        window.location.href = "/dashboard2";
+    } catch (err) { 
+        console.error(err); 
+        alert("Server error"); 
+    }
 }
 </script>
 </body>
