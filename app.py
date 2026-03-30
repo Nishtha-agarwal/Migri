@@ -114,16 +114,14 @@ def dashboard():
     user_id = int(get_jwt_identity())
     print("USER ID:", user_id)
     user = User.query.get(user_id)
-    plan = Plan.query.all()
     subscription = Subscription.query.filter_by(user_id=user_id).first()
     if subscription:
-    user_plan = Plan.query.get(subscription.plan_id)  # Get the Plan object
-    if user_plan.name.lower() == "pro" and subscription.status == "active":
-        print("User has active subscription ✅")
-        return render_template('dashboard2.html')
-    else:
-        print("User has no subscription or inactive ❌")
-        return render_template('dashboard1.html')  
+        user_plan = Plan.query.get(subscription.plan_id)
+        if user_plan and user_plan.name.lower() == "pro" and subscription.status == "active":
+            print("User has active subscription ✅")
+            return render_template('dashboard2.html')
+    print("User has no subscription or inactive ❌")
+    return render_template('dashboard1.html')  
         
 @app.route('/dashboard1')
 def dashboard1():
