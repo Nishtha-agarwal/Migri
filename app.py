@@ -115,7 +115,7 @@ def dashboard():
     print("USER ID:", user_id)
     user = User.query.get(user_id)
     subscription = Subscription.query.filter_by(user_id=user_id).first()
-    if subscription and subscription.status == "active":
+    if subscription.status == "active":
         return render_template('dashboard2.html')  
     else:
         return render_template('dashboard1.html')
