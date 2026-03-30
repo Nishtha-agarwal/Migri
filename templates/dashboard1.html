@@ -6,6 +6,10 @@
 <body>
 
 <h1 id="dashboardTitle">Dashboard</h1>
+<div class="header">
+    <h1>Dashboard_Free</h1>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
 
 <button onclick="getFeatures()">View Features</button>
 <button id="createProjectBtn" onclick="openForm()">Create Project</button>
@@ -60,6 +64,11 @@
 </style>
 
 <script>
+function logout() {
+    localStorage.removeItem("token");
+    window.location.href = "/login"; 
+}
+
 let userPlan = null; // store plan info
 let projects = [];
 
