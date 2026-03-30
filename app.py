@@ -34,7 +34,6 @@ CORS(app, supports_credentials=True)
 db.init_app(app)
 jwt.init_app(app)
 
-app.register_blueprint(auth_bp, url_prefix='/api')
 app.register_blueprint(features_bp, url_prefix='/api')
 app.register_blueprint(project_bp, url_prefix='/api')
 
