@@ -5,7 +5,7 @@
 </head>
 <body>
 
-<h1>Dashboard_Free</h1>
+<h1 id="dashboardTitle">Dashboard_Free</h1>
 <div class="header">
     <button class="logout-btn" onclick="logout()">Logout</button>
     <br>
@@ -85,17 +85,12 @@ async function getFeatures() {
         headers: { Authorization: "Bearer " + token },
         credentials: "include"
     });
-
     let data;
     try { data = await res.json(); } 
     catch { alert("❌ Server error"); return; }
-
     if (!res.ok) { alert(data.msg || "Error"); return; }
-
     userPlan = data.plan; // store plan globally
-
     document.getElementById("dashboardTitle").innerText = "Dashboard_" + userPlan.name;
-
     document.getElementById("planInfo").innerHTML = `
         <p><b>Plan Name:</b> ${userPlan.name}</p>
         <p><b>Max Usage:</b> ${userPlan.max_usage}</p>
