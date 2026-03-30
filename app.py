@@ -88,7 +88,7 @@ def login():
         return jsonify({"error": "User not found"}), 401
     if not check_password_hash(user.password, password):
         return jsonify({"error": "Wrong password"}), 401
-    access_token = create_access_token(identity=user.id)
+    access_token = create_access_token(identity=str(user.id))
     resp = jsonify({"msg": "Login successful"})
     set_access_cookies(resp, access_token)
     return resp, 200
@@ -103,12 +103,13 @@ def logout():
 @app.route('/dashboard')
 @jwt_required()
 def dashboard():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
     subscription = Subscription.query.filter_by(user_id=user_id).first()
-    if subscription and subscription.status == "active":
+    if user.plan == "Pro" and subscription and subscription.status == "active":
         return render_template('dashboard2.html')  
     else:
-        return render_template('dashboard1.html') 
+        return render_template('dashboard1.html')
 
 @app.route('/dashboard1')
 def dashboard1():
