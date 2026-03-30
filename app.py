@@ -45,7 +45,8 @@ def load_user(user_id):
 def home():
     return render_template('index.html')
 
-@app.route("/api/register", methods=["POST"])
+# Register
+@app.route('/api/register', methods=['POST'])
 def register():
     data = request.json
     username = data.get("username")
@@ -55,24 +56,35 @@ def register():
         return jsonify({"error": "All fields are required"}), 400
     if User.query.filter_by(username=username).first():
         return jsonify({"error": "Username already exists"}), 400
-    hashed_pw = generate_password_hash(password)
-    user = User(username=username, password=hashed_pw, tenant_id=tenant_id)
+    user = User(
+        username=username,
+        password_hash=generate_password_hash(password),
+        tenant_id=tenant_id
+    )
     db.session.add(user)
     db.session.commit()
-    return jsonify({"msg": "Registration successful"}), 201
+    return jsonify({"msg": "Registration successful ✅"}), 201
 
-@app.route("/api/login", methods=["POST"])
+# Login
+@app.route('/api/login', methods=['POST'])
 def login():
     data = request.json
     username = data.get("username")
     password = data.get("password")
     user = User.query.filter_by(username=username).first()
-    if not user or not check_password_hash(user.password, password):
+    if not user or not check_password_hash(user.password_hash, password):
         return jsonify({"error": "Invalid username or password"}), 401
     access_token = create_access_token(identity=user.id)
-    resp = jsonify({"msg": "Login successful"})
-    set_access_cookies(resp, access_token)  # ✅ cookie sent
-    return resp
+    resp = jsonify({"msg": "Login successful 🚀"})
+    set_access_cookies(resp, access_token)
+    return resp, 200
+
+# Logout
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    resp = jsonify({"msg": "Logged out"})
+    unset_jwt_cookies(resp)
+    return resp, 200
 
 @app.route('/dashboard')
 @jwt_required()
