@@ -11,7 +11,6 @@ from flask_login import LoginManager
 from flask_jwt_extended import create_access_token, set_access_cookies, jwt_required, unset_jwt_cookies
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError
-from flask_sqlalchemy import SQLAlchemy
 
 JWT_TOKEN_LOCATION = ["headers"]
 JWT_HEADER_NAME = "Authorization"
@@ -24,9 +23,6 @@ app.config["JWT_ACCESS_COOKIE_NAME"] = "access_token_cookie"
 app.config["JWT_COOKIE_SECURE"] = False          
 app.config["JWT_ACCESS_COOKIE_PATH"] = "/"
 app.config["JWT_COOKIE_CSRF_PROTECT"] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-db = SQLAlchemy(app)
-jwt = JWTManager()
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
