@@ -63,7 +63,7 @@ def register():
         new_user = User(
             username=username,
             password=hashed_pw,
-            tenant=tenant   # 🔥 use relationship instead of tenant_id
+            tenant=tenant  
         )
         db.session.add_all([tenant, new_user])
         db.session.commit()
@@ -115,7 +115,7 @@ def dashboard():
     print("USER ID:", user_id)
     user = User.query.get(user_id)
     subscription = Subscription.query.filter_by(user_id=user_id).first()
-    if user.plan == "Pro" and subscription and subscription.status == "active":
+    if subscription and subscription.status == "active":
         return render_template('dashboard2.html')  
     else:
         return render_template('dashboard1.html')
