@@ -57,24 +57,19 @@ def register():
         if User.query.filter_by(username=username).first():
             return jsonify({"error": "Username already exists"}), 400
         tenant = Tenant(name=f"{username}_tenant")
-        db.session.add(tenant)
-        db.session.commit()
         hashed_pw = generate_password_hash(password)
         new_user = User(
             username=username,
             password=hashed_pw,
-            tenant_id=tenant.id
+            tenant=tenant   # 🔥 use relationship instead of tenant_id
         )
-        db.session.add(new_user)
+        db.session.add_all([tenant, new_user])
         db.session.commit()
         return jsonify({"msg": "Registration successful"}), 200
-    except IntegrityError:
-        db.session.rollback()
-        return jsonify({"error": "Database error"}), 500
     except Exception as e:
         db.session.rollback()
-        print("ERROR:", str(e))  # 👈 VERY IMPORTANT (check Render logs)
-        return jsonify({"error": "Something went wrong"}), 500
+        print("ERROR:", str(e))   # 👈 CHECK THIS IN RENDER LOGS
+        return jsonify({"error": "Server error"}), 500
 
 # Login
 @app.route("/api/login", methods=["POST"])
