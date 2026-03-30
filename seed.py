@@ -1,10 +1,7 @@
 from app import app
 from models import *
 
-with app.app_context():
-    db.drop_all()
-    db.create_all()
-
+def run_seed():
     # 🔹 Tenants
     t1 = Tenant(name="Company A")
     t2 = Tenant(name="Company B")
