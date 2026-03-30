@@ -4,8 +4,6 @@ from config import Config
 import models
 from models import db, User, Tenant, Plan, Project, Feature, PlanFeature, Subscription, Usage
 from flask_cors import CORS
-from routes.features import features_bp
-from routes.projects import project_bp
 from werkzeug.utils import secure_filename
 import os
 from flask_login import LoginManager
@@ -35,9 +33,6 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
     
-app.register_blueprint(features_bp, url_prefix='/api')
-app.register_blueprint(project_bp, url_prefix='/api')
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -76,22 +71,16 @@ def login():
     data = request.get_json()
     username = data.get("username")
     password = data.get("password")
-    print("\n--- LOGIN DEBUG ---")
-    print("Entered username:", username)
-    print("Entered password:", password)
     user = User.query.filter_by(username=username).first()
-    print("User found:", user)
-    if user:
-        print("Stored password:", user.password)
-        print("Password match:", check_password_hash(user.password, password))
     if not user:
         return jsonify({"error": "User not found"}), 401
     if not check_password_hash(user.password, password):
         return jsonify({"error": "Wrong password"}), 401
     access_token = create_access_token(identity=str(user.id))
-    resp = jsonify({"msg": "Login successful"})
-    set_access_cookies(resp, access_token)
-    return resp, 200
+    return jsonify({
+        "msg": "Login successful",
+        "access_token": access_token
+    }), 200
 
 # Logout
 @app.route("/api/logout", methods=["POST"])
@@ -118,7 +107,105 @@ def dashboard1():
 @app.route('/dashboard2')
 def dashboard2():
     return render_template('dashboard2.html') 
-    
+
+@app.route('/api/features', methods=['GET'])
+@jwt_required()
+def get_features():
+    user_id = get_jwt_identity()
+    user = User.query.get(int(user_id))
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+    subscription = Subscription.query.filter_by(user_id=user.id).first()
+    if subscription:
+        plan = Plan.query.get(subscription.plan_id)
+    else:
+        plan = Plan.query.filter_by(name="Free").first()
+    if not plan:
+        return jsonify({"msg": "Plan not configured"}), 500
+    if plan.name == "Free":
+        features = ["Create limited projects", "Basic support"]
+    else:
+        features = ["Unlimited projects", "Priority support", "Advanced analytics"]
+    project_count = Project.query.filter_by(user_id=user.id).count()
+    return jsonify({
+    "plan": {
+        "name": plan.name,
+        "max_usage": plan.max_usage
+    },
+    "features": features,
+    "usage": {
+        "used": project_count,
+        "limit": plan.max_usage
+    },
+    "subscription": {
+        "id": subscription.id if subscription else None,
+        "status": subscription.status if subscription else "free"
+    }
+})
+
+@app.route("/api/projects", methods=["GET"])
+@jwt_required()
+def get_projects():
+    user_id = get_jwt_identity()
+    user = User.query.get(int(user_id))
+    projects = Project.query.filter_by(user_id=user_id).all()
+    return jsonify([
+        {
+            "id": p.id,
+            "name": p.name
+        } for p in projects
+    ])
+
+@app.route('/api/create_project', methods=['POST'])
+@jwt_required()
+def create_project():
+    user_id = get_jwt_identity()
+    user = User.query.get(int(user_id))
+    sub = Subscription.query.filter_by(user_id=user.id).first()
+    if sub:
+        plan = Plan.query.get(sub.plan_id)
+    else:
+        plan = Plan.query.filter_by(name="Free").first()
+    if not plan:
+        return jsonify({"msg": "Plan not found"}), 500
+    project_count = Project.query.filter_by(user_id=user.id).count()
+    if project_count >= plan.max_usage:
+        return jsonify({"msg": "Limit reached"}), 403
+    data = request.get_json()
+    new_project = Project(
+        name=data["name"],
+        user_id=user.id,
+        tenant_id=user.tenant_id
+    )
+    db.session.add(new_project)
+    db.session.commit()
+    return jsonify({"msg": "Project created"})
+
+@app.route("/api/delete_project/<int:id>", methods=["DELETE"])
+@jwt_required()
+def delete_project(id):
+    user_id = get_jwt_identity()
+    user = User.query.get(int(user_id))
+    project = Project.query.filter_by(id=id, user_id=user_id).first()
+    if not project:
+        return jsonify({"msg": "Project not found"}), 404
+    db.session.delete(project)
+    db.session.commit()
+    return jsonify({"msg": "Project deleted"})
+
+@app.route("/api/update_project/<int:id>", methods=["PUT"])
+@jwt_required()
+def update_project(id):
+    data = request.get_json()
+    user_id = get_jwt_identity()
+    user = User.query.get(int(user_id))
+    project = Project.query.filter_by(id=id, user_id=user_id).first()
+    if not project:
+        return jsonify({"msg": "Not found"}), 404
+    project.name = data["name"]
+    db.session.commit()
+    return jsonify({"msg": "Updated"})
+
 @app.route('/api/usage', methods=['GET'])
 @jwt_required()
 def get_usage():
