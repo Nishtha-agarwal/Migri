@@ -81,14 +81,14 @@ async function login(){
         const res = await fetch(`${BASE_URL}/api/login`,{
             method:"POST",
             headers:{"Content-Type":"application/json"},
+            credentials:"include",   // 🔥 VERY IMPORTANT
             body: JSON.stringify({username, password})
         });
         const data = await res.json().catch(()=>({}));
         if(!res.ok){ 
-            showToast(data.msg || "Login failed"); 
+            showToast(data.error || "Login failed"); 
             return; 
         }
-        localStorage.setItem("token", data.access_token);
         showToast("Login successful");
         setTimeout(()=>window.location.href="/dashboard",1000);
     }catch(err){ 
