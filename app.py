@@ -45,41 +45,36 @@ def load_user(user_id):
 def home():
     return render_template('index.html')
 
-# ---------------- REGISTER ----------------
 @app.route("/api/register", methods=["POST"])
 def register():
     data = request.json
     username = data.get("username")
-    password = data.get("tenant_id")  # 🔹 typo fix in actual code: tenant_id separate
+    password = data.get("password")
     tenant_id = data.get("tenant_id")
-    if not username or not data.get("password") or not tenant_id:
+    if not username or not password or not tenant_id:
         return jsonify({"error": "All fields are required"}), 400
-    if username in users_db:
+    if User.query.filter_by(username=username).first():
         return jsonify({"error": "Username already exists"}), 400
-    password_hash = generate_password_hash(data.get("password"))
-    users_db[username] = {"password_hash": password_hash, "tenant_id": tenant_id}
+
+    hashed_pw = generate_password_hash(password)
+    user = User(username=username, password=hashed_pw, tenant_id=tenant_id)
+    db.session.add(user)
+    db.session.commit()
+
     return jsonify({"msg": "Registration successful"}), 201
 
-# ---------------- LOGIN ----------------
 @app.route("/api/login", methods=["POST"])
 def login():
     data = request.json
     username = data.get("username")
     password = data.get("password")
-    user = users_db.get(username)
-    if not user or not check_password_hash(user["password_hash"], password):
+    user = User.query.filter_by(username=username).first()
+    if not user or not check_password_hash(user.password, password):
         return jsonify({"error": "Invalid username or password"}), 401
-    session["username"] = username
-    session["tenant_id"] = user["tenant_id"]
-    return jsonify({"msg": "Login successful"}), 200
-
-@app.route('/dashboard1')
-def dashboard1():
-    return render_template('dashboard1.html')  
-    
-@app.route('/dashboard2')
-def dashboard2():
-    return render_template('dashboard2.html')
+    access_token = create_access_token(identity=user.id)
+    resp = jsonify({"msg": "Login successful"})
+    set_access_cookies(resp, access_token)
+    return resp, 200
 
 @app.route('/dashboard')
 @jwt_required()
@@ -89,7 +84,15 @@ def dashboard():
     if subscription and subscription.status == "active":
         return render_template('dashboard2.html')  
     else:
-        return render_template('dashboard1.html')  
+        return render_template('dashboard1.html') 
+
+@app.route('/dashboard1')
+def dashboard1():
+    return render_template('dashboard1.html')  
+    
+@app.route('/dashboard2')
+def dashboard2():
+    return render_template('dashboard2.html') 
     
 @app.route('/api/usage', methods=['GET'])
 @jwt_required()
