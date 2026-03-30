@@ -13,9 +13,7 @@
 <!-- 🔹 Project Form Modal -->
 <div id="projectForm" style="display:none; position:fixed; top:30%; left:40%; background:white; padding:20px; box-shadow:0 0 10px gray;">
     <h3>Create Project</h3>
-
     <input id="projectName" placeholder="Project Name" style="display:block; margin-bottom:10px;" />
-
     <button onclick="submitProject()">Submit</button>
     <button onclick="closeForm()">Cancel</button>
 </div>
@@ -244,11 +242,12 @@ async function renameProject(id, oldName) {
 
 // 🔹 UI Controls
 function openForm() {
-    document.getElementById("projectForm").classList.add("show");
+    console.log("clicked");
+    document.getElementById("projectForm").style.display = "block";
 }
 
 function closeForm() {
-    document.getElementById("projectForm").classList.remove("show");
+    document.getElementById("projectForm").style.display = "none";
 }
 </script>
 </body>
