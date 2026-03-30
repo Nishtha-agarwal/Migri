@@ -110,14 +110,16 @@ def logout():
 @app.route('/dashboard')
 @jwt_required()
 def dashboard():
+    print("✅ Dashboard hit")  # 👈 add this
     user_id = int(get_jwt_identity())
+    print("USER ID:", user_id)
     user = User.query.get(user_id)
     subscription = Subscription.query.filter_by(user_id=user_id).first()
     if user.plan == "Pro" and subscription and subscription.status == "active":
         return render_template('dashboard2.html')  
     else:
         return render_template('dashboard1.html')
-
+        
 @app.route('/dashboard1')
 def dashboard1():
     return render_template('dashboard1.html')  
