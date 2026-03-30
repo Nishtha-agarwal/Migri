@@ -1,4 +1,4 @@
-from models import db, *
+from models import db, User, Tenant, Plan, Project, Feature, PlanFeature, Subscription, Usage
 from werkzeug.security import generate_password_hash
 
 def run_seed():
