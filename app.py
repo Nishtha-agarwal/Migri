@@ -1,13 +1,12 @@
 from flask import Flask, render_template, request, jsonify, Blueprint
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from config import Config
-from extensions import db, jwt
+from extensions import jwt
 from models import *
 from flask_cors import CORS
 from routes.features import features_bp
 from routes.projects import project_bp
 from werkzeug.utils import secure_filename
-from extensions import db
 import os
 from flask_login import LoginManager
 from flask_jwt_extended import create_access_token, set_access_cookies, jwt_required, unset_jwt_cookies
