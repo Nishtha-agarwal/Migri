@@ -89,7 +89,7 @@
 window.onload = () => {
     loadProjects();
 };
-const token = localStorage.getItem("token");
+
     
 // 🔹 Get Features
 async function getFeatures() {
@@ -309,7 +309,8 @@ async function submitSubscription() {
 
 // 🔹 UI Controls
 function openForm() {
-    document.getElementById("projectForm").classList.add("show");
+    document.getElementById("projectForm").style.display = "block";
+    document.getElementById("projectName").value = "";
 }
 
 function closeForm() {
