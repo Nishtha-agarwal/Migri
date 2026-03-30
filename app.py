@@ -80,10 +80,9 @@ def login():
     if not check_password_hash(user.password, password):
         return jsonify({"error": "Wrong password"}), 401
     access_token = create_access_token(identity=user.id)
-    return jsonify({
-        "msg": "Login successful",
-        "access_token": access_token
-    })
+    response = jsonify({"msg": "Login successful"})
+    set_access_cookies(response, access_token)  # 🔥 THIS IS THE KEY
+    return response
     
 @app.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True)
