@@ -98,8 +98,7 @@ async function getFeatures() {
         method: "GET",
         headers: {
             Authorization: "Bearer " + token
-        },
-        credentials: "include"
+        }
     });
     let text = await res.text();
     let data;
