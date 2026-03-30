@@ -3,15 +3,17 @@
 <head>
     <title>SaaS</title>
     <style>
-        /* Your existing gradient & card styles */
-        body { margin:0; font-family:'Segoe UI', sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; background: linear-gradient(-45deg,#1e3c72,#2a5298,#00c6ff,#0072ff); background-size:400% 400%; animation: gradientBG 10s ease infinite; }
-        @keyframes gradientBG {0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+        body {margin:0;font-family:'Segoe UI',sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;background: linear-gradient(-45deg,#1e3c72,#2a5298,#00c6ff,#0072ff);background-size:400% 400%;animation:gradientBG 10s ease infinite;}
+        @keyframes gradientBG{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
         .card{width:360px;backdrop-filter:blur(15px);background:rgba(255,255,255,0.1);border-radius:16px;padding:25px;color:white;box-shadow:0 10px 30px rgba(0,0,0,0.3);}
         h2{text-align:center} input{width:100%;padding:10px;border-radius:8px;border:none;outline:none;margin:10px 0;} button{width:100%;padding:10px;border:none;border-radius:8px;background:#00c6ff;color:white;font-weight:bold;cursor:pointer;transition:.3s;} button:hover{background:#0072ff} .hidden{display:none;} .switch{text-align:center;margin-top:10px;cursor:pointer;font-size:14px;color:#ddd;} #toast{position:fixed;bottom:20px;right:20px;background:black;color:white;padding:12px 20px;border-radius:8px;display:none;}
+        #logoutBtn{position:absolute;top:20px;right:20px;}
     </style>
 </head>
 <body>
-<button id="logoutBtn" onclick="logout()" style="position:absolute; top:20px; right:20px;">Logout</button>
+
+<button id="logoutBtn" onclick="logout()">Logout</button>
+
 <div class="card">
     <div id="loginBox">
         <h2>Login</h2>
@@ -29,11 +31,13 @@
         <div class="switch" onclick="showLogin()">← Back to login</div>
     </div>
 </div>
+
 <div id="toast"></div>
 
 <script>
-const BASE_URL = "https://migri-3.onrender.com"; 
+const BASE_URL = "https://migri-3.onrender.com";
 
+// Toast
 function showToast(msg){
     const toast = document.getElementById("toast");
     toast.innerText = msg;
@@ -41,9 +45,11 @@ function showToast(msg){
     setTimeout(()=>toast.style.display="none",2000);
 }
 
+// Toggle
 function showRegister(){ document.getElementById("loginBox").classList.add("hidden"); document.getElementById("registerBox").classList.remove("hidden"); }
 function showLogin(){ document.getElementById("registerBox").classList.add("hidden"); document.getElementById("loginBox").classList.remove("hidden"); }
 
+// REGISTER
 async function register(){
     const username=document.getElementById("reg_username").value;
     const password=document.getElementById("reg_password").value;
@@ -53,16 +59,17 @@ async function register(){
         const res=await fetch(`${BASE_URL}/api/register`,{
             method:"POST",
             headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({username,password,tenant_id:tenant}),
-            credentials:"include"
+            credentials:"include",
+            body:JSON.stringify({username,password,tenant_id:tenant})
         });
         const data=await res.json().catch(()=>({}));
         if(!res.ok){ showToast(data.error||"Registration failed"); return; }
-        showToast(data.msg);
+        showToast(data.msg||"Registration successful");
         setTimeout(showLogin,1000);
     }catch(err){ console.error(err); showToast("Server unreachable"); }
 }
 
+// LOGIN
 async function login(){
     const username=document.getElementById("login_username").value;
     const password=document.getElementById("login_password").value;
@@ -71,57 +78,44 @@ async function login(){
         const res=await fetch(`${BASE_URL}/api/login`,{
             method:"POST",
             headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({username,password}),
-            credentials:"include"
+            credentials:"include",
+            body:JSON.stringify({username,password})
         });
         const data=await res.json().catch(()=>({}));
         if(!res.ok){ showToast(data.error||"Login failed"); return; }
-        showToast(data.msg);
+        showToast(data.msg||"Login successful");
         setTimeout(()=>window.location.href="/dashboard",1000);
     }catch(err){ console.error(err); showToast("Server unreachable"); }
 }
+
+// LOGOUT
 async function logout(){
-    try {
-        const res = await fetch(`${BASE_URL}/api/logout`, {
-            method: "POST",
-            credentials: "include"
+    try{
+        const res=await fetch(`${BASE_URL}/api/logout`,{
+            method:"POST",
+            credentials:"include"
         });
         if(res.ok){
             showToast("Logged out ✅");
-            setTimeout(()=> window.location.href = "/", 1000);
+            setTimeout(()=>window.location.href="/",1000);
         }
-    } catch(err){
-        console.error(err);
-        showToast("Logout failed");
-    }
+    }catch(err){ console.error(err); showToast("Logout failed"); }
 }
 
-// Wrapper function to fetch protected data with auto-redirect
-async function fetchWithAuth(url, options = {}){
-    options.credentials = "include"; // send cookies
-    try {
+// Auto-redirect if JWT expires
+async function fetchWithAuth(url, options={}){
+    options.credentials = "include";
+    try{
         const res = await fetch(url, options);
         if(res.status === 401){
-            // JWT expired or invalid
-            showToast("Session expired. Redirecting to login...");
-            setTimeout(()=> window.location.href = "/", 1500);
+            showToast("Session expired. Redirecting...");
+            setTimeout(()=>window.location.href="/",1500);
             return null;
         }
         return await res.json();
-    } catch(err){
-        console.error(err);
-        showToast("Server unreachable");
-        return null;
-    }
-}
-
-// Example usage: fetch usage or dashboard data
-async function loadDashboard(){
-    const data = await fetchWithAuth(`${BASE_URL}/dashboard`);
-    if(data){
-        console.log(data);
-    }
+    }catch(err){ console.error(err); showToast("Server unreachable"); return null; }
 }
 </script>
+
 </body>
 </html>
