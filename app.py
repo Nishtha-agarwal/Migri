@@ -4,7 +4,6 @@ from config import Config
 from extensions import db, jwt
 from models import *
 from flask_cors import CORS
-from routes.auth import auth_bp
 from routes.features import features_bp
 from routes.projects import project_bp
 from werkzeug.utils import secure_filename
