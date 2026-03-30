@@ -44,6 +44,18 @@
 <pre id="output"></pre>
 
 <style>
+    #projectForm {
+        display: none;
+        position: fixed;
+        top: 30%;
+        left: 40%;
+        background: white;
+        padding: 20px;
+        box-shadow: 0 0 10px gray;
+    }
+    #projectForm.show {
+        display: block;
+    }
     .modal {
         display: none;
         position: fixed;
@@ -309,14 +321,13 @@ async function submitSubscription() {
 
 // 🔹 UI Controls
 function openForm() {
+    console.log("clicked");
     document.getElementById("projectForm").style.display = "block";
-    document.getElementById("projectName").value = "";
 }
 
 function closeForm() {
-    document.getElementById("projectForm").classList.remove("show");
+    document.getElementById("projectForm").style.display = "none";
 }
-
 function openSubscriptionForm() {
     document.getElementById("subscriptionModal").classList.add("show");
 }
