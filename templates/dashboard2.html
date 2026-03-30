@@ -114,11 +114,6 @@ async function getFeatures() {
 //Load Project
 async function loadProjects() {
     const token = localStorage.getItem("token");
-    if (!token) {
-        alert("Please login first");
-        window.location.href = "/";
-        return;
-    }
     try {
         const res = await fetch('/api/projects', {
             method: "GET",
