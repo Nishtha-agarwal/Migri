@@ -98,7 +98,8 @@ async function getFeatures() {
         method: "GET",
         headers: {
             "Authorization": "Bearer " + token
-        }
+        },
+        credentials: "include"
     });
     let text = await res.text();
     let data;
@@ -134,7 +135,8 @@ async function loadProjects() {
             method: "GET",
             headers: {
                 "Authorization": "Bearer " + token
-            }
+            },
+            credentials: "include"
         });
         const text = await res.text();
         let projects;
@@ -184,6 +186,7 @@ async function submitProject() {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + token
             },
+            credentials: "include",
             body: JSON.stringify({ name })
         });
         const data = await res.json();
@@ -214,7 +217,8 @@ async function deleteProject(id) {
             method: "DELETE",
             headers: {
                 'Authorization': 'Bearer ' + token
-            }
+            },
+            credentials: "include"
         });
         const data = await res.json();
         if (!res.ok) {
@@ -241,6 +245,7 @@ async function renameProject(id, oldName) {
                 "Content-Type": "application/json",
                 "Authorization": "Bearer " + token
             },
+            credentials: "include",
             body: JSON.stringify({ name: newName })
         });
         const data = await res.json();
@@ -278,6 +283,7 @@ async function submitSubscription() {
             headers: {
                 "Authorization": "Bearer " + token
             },
+            credentials: "include",
             body: formData
         });
         const text = await res.text();
