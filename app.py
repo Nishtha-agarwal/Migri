@@ -27,6 +27,7 @@ app.config["JWT_ACCESS_COOKIE_PATH"] = "/"
 app.config["JWT_COOKIE_CSRF_PROTECT"] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 db = SQLAlchemy(app)
+jwt = JWTManager()
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
