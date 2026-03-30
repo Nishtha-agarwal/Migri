@@ -129,7 +129,7 @@
 <div id="toast"></div>
     
 <script>
-const BASE_URL = window.location.origin;
+const BASE_URL = "http://127.0.0.1:8000";
     
 // 🔁 Toggle
 function showRegister() {
@@ -143,7 +143,7 @@ function showLogin() {
 // 👁 Toggle Password
 function togglePassword(id) {
     const input = document.getElementById(id);
-    input.type = input.type === "password" ? "text" : "password";
+    input.type = input.type === "password" ? "text": "password";
 }
 
 // 🔔 Toast
