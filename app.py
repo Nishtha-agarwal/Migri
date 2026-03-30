@@ -46,36 +46,39 @@ def home():
     return render_template('index.html')
 
 # Register
-@app.route('/api/register', methods=['POST'])
+@app.route("/api/register", methods=["POST"])
 def register():
-    data = request.json
+    data = request.get_json()
     username = data.get("username")
     password = data.get("password")
     tenant_id = data.get("tenant_id")
     if not username or not password or not tenant_id:
-        return jsonify({"error": "All fields are required"}), 400
+        return jsonify({"error": "All fields required"}), 400
     if User.query.filter_by(username=username).first():
         return jsonify({"error": "Username already exists"}), 400
-    user = User(
-        username=username,
-        password_hash=generate_password_hash(password),
-        tenant_id=tenant_id
-    )
-    db.session.add(user)
-    db.session.commit()
-    return jsonify({"msg": "Registration successful ✅"}), 201
+    hashed_pw = generate_password_hash(password)  # from werkzeug.security
+    new_user = User(username=username, password=hashed_pw, tenant_id=tenant_id)
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({"msg": "Registration successful"}), 200
+    except Exception as e:
+        print("Register error:", e)
+        return jsonify({"error": "Server error"}), 500
 
 # Login
-@app.route('/api/login', methods=['POST'])
+@app.route("/api/login", methods=["POST"])
 def login():
-    data = request.json
+    data = request.get_json()
     username = data.get("username")
     password = data.get("password")
+    if not username or not password:
+        return jsonify({"error": "Enter credentials"}), 400
     user = User.query.filter_by(username=username).first()
-    if not user or not check_password_hash(user.password_hash, password):
-        return jsonify({"error": "Invalid username or password"}), 401
+    if not user or not check_password_hash(user.password, password):
+        return jsonify({"error": "Invalid credentials"}), 401
     access_token = create_access_token(identity=user.id)
-    resp = jsonify({"msg": "Login successful 🚀"})
+    resp = jsonify({"msg": "Login successful"})
     set_access_cookies(resp, access_token)
     return resp, 200
 
