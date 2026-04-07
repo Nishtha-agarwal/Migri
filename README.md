@@ -138,13 +138,11 @@ saas-subscription-api/
 └── README.md              # Documentation
 
 ## 🏗️ System Architecture
-Client (Postman / Frontend)
+Client (Frontend)
           ↓
-Flask REST API (JWT Auth + RBAC)
+Flask REST API (JWT Auth)
           ↓
-Business Logic (Feature Entitlement)
-          ↓
-Database (SQLite / PostgreSQL)
+Database (SQLite)
 
 ## ⚠️ Challenges & Solutions
 | Challenge              | Solution                            |
